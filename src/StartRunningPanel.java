@@ -5,28 +5,35 @@ import java.awt.event.ActionListener;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.List;
 
 public class StartRunningPanel extends JPanel {
     private JComboBox<String> serverComboBox;
-    private JComboBox<String> serviceListComboBox;
+    private JList<String> serviceList;
+    private DefaultListModel<String> serviceListModel;
     private JButton startButton;
 
     public StartRunningPanel() {
         setLayout(new BorderLayout());
 
         // Combo box para seleccionar el servidor (ejemplo estático)
-        serverComboBox = new JComboBox<>(new String[] { "Server01", "Server02" });
-        add(new JLabel("Select Server:"), BorderLayout.WEST);
-        add(serverComboBox, BorderLayout.CENTER);
+        serverComboBox = new JComboBox<>(new String[]{"Server01", "Server02"});
+        JPanel serverPanel = new JPanel(new FlowLayout());
+        serverPanel.add(new JLabel("Select Server:"));
+        serverPanel.add(serverComboBox);
+        add(serverPanel, BorderLayout.NORTH);
 
-        // Combo box para seleccionar la lista de servicios (ejemplo estático)
-        serviceListComboBox = new JComboBox<>(new String[] { "List A", "List B" });
-        add(new JLabel("Select Service List:"), BorderLayout.NORTH);
-        add(serviceListComboBox, BorderLayout.SOUTH);
+        // Lista para seleccionar los servicios disponibles
+        serviceListModel = new DefaultListModel<>();
+        serviceList = new JList<>(serviceListModel);
+        serviceList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+        add(new JScrollPane(serviceList), BorderLayout.CENTER);
 
-        // Botón para iniciar
+        // Botón para iniciar el proceso
         startButton = new JButton("Start Running");
-        add(startButton, BorderLayout.EAST);
+        JPanel buttonPanel = new JPanel(new FlowLayout());
+        buttonPanel.add(startButton);
+        add(buttonPanel, BorderLayout.SOUTH);
 
         // Acción del botón para iniciar el proceso
         startButton.addActionListener(new ActionListener() {
@@ -35,17 +42,37 @@ public class StartRunningPanel extends JPanel {
                 startServiceOnServer();
             }
         });
+
+        // Cargar servicios dinámicamente
+        loadServices();
     }
 
+    // Método para cargar los servicios disponibles
+    private void loadServices() {
+        List<String> services = ServiceFetcher.fetchServices(); // Obtener servicios del sistema
+        for (String service : services) {
+            serviceListModel.addElement(service); // Agregar cada servicio a la lista
+        }
+    }
+
+    // Método para iniciar los servicios seleccionados en el servidor
     private void startServiceOnServer() {
         String selectedServer = (String) serverComboBox.getSelectedItem();
-        String selectedServiceList = (String) serviceListComboBox.getSelectedItem();
+        List<String> selectedServices = serviceList.getSelectedValuesList();
+
+        if (selectedServices.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Please select at least one service");
+            return;
+        }
 
         // Ruta del script de PowerShell
         String scriptPath = "C:\\ruta\\a\\tu\\script\\Start-Service.ps1"; // Cambia esta ruta según tu configuración
 
+        // Crear el comando de PowerShell con los servicios seleccionados
+        String serviceNames = String.join(",", selectedServices);
+
         // Crear el proceso para ejecutar el script de PowerShell
-        ProcessBuilder processBuilder = new ProcessBuilder("powershell.exe", "-ExecutionPolicy", "Bypass", "-File", scriptPath, selectedServer, selectedServiceList);
+        ProcessBuilder processBuilder = new ProcessBuilder("powershell.exe", "-ExecutionPolicy", "Bypass", "-File", scriptPath, selectedServer, serviceNames);
 
         try {
             // Iniciar el proceso
@@ -63,7 +90,7 @@ public class StartRunningPanel extends JPanel {
             // Esperar a que el proceso termine
             int exitCode = process.waitFor();
             if (exitCode == 0) {
-                JOptionPane.showMessageDialog(this, "Services started successfully:\n" + output.toString());
+                JOptionPane.showMessageDialog(this, "Services started successfully on " + selectedServer + ":\n" + output.toString());
             } else {
                 JOptionPane.showMessageDialog(this, "Error starting services. Exit code: " + exitCode);
             }

@@ -2,13 +2,13 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 
 public class Main extends JFrame {
 
     private CardLayout cardLayout;
     private JPanel mainPanel;
+    private StartRunningPanel startRunningPanel;
+    private ServerPanel serverPanel;
 
     public Main() {
         // Configuración de la ventana principal
@@ -23,9 +23,9 @@ public class Main extends JFrame {
 
         // Crear los paneles
         ButtonPanel buttonPanel = new ButtonPanel(); // Panel principal con botones
-        ServerPanel serverPanel = new ServerPanel(); // Panel para registrar servidores
+        serverPanel = new ServerPanel(); // Panel para registrar servidores
+        startRunningPanel = new StartRunningPanel(serverPanel.getRegisteredServers()); // Panel para iniciar los servicios en los servidores
         ServiceListPanel serviceListPanel = new ServiceListPanel(); // Panel para crear la lista de servicios
-        StartRunningPanel startRunningPanel = new StartRunningPanel(); // Panel para iniciar los servicios en los servidores
 
         // Añadir los paneles al CardLayout
         mainPanel.add(buttonPanel, "Home");
@@ -60,6 +60,8 @@ public class Main extends JFrame {
         buttonPanel.startRunningButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                // Antes de mostrar el panel Start Running, actualizamos la lista de servidores
+                startRunningPanel.updateServerList(serverPanel.getRegisteredServers());
                 cardLayout.show(mainPanel, "Start Running");
             }
         });
@@ -80,15 +82,15 @@ public class Main extends JFrame {
         homeButton.setFocusPainted(false); // Quitar el borde de enfoque
 
         // Efecto reactivo para el botón "Home"
-        homeButton.addMouseListener(new MouseAdapter() {
+        homeButton.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
-            public void mouseEntered(MouseEvent e) {
+            public void mouseEntered(java.awt.event.MouseEvent e) {
                 homeButton.setBackground(Color.decode("#a03b7e")); // Color un poco más claro
                 homeButton.setForeground(Color.decode("#e0e0e0")); // Color del texto más claro
             }
 
             @Override
-            public void mouseExited(MouseEvent e) {
+            public void mouseExited(java.awt.event.MouseEvent e) {
                 homeButton.setBackground(Color.decode("#830051"));
                 homeButton.setForeground(Color.WHITE);
             }

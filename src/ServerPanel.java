@@ -1,73 +1,64 @@
 import javax.swing.*;
-import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.FileWriter;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ServerPanel extends JPanel {
+    private List<String> registeredServers;
     private JTextField serverNameField;
-    private JTextField ipField;
-    private JTextField osField;
-    private JButton saveButton;
-    private JTextArea displayArea;
+    private JButton addButton;
+    private DefaultListModel<String> serverListModel;
 
     public ServerPanel() {
-        setLayout(new BorderLayout());
+        registeredServers = new ArrayList<>();
+        serverNameField = new JTextField(15);
+        addButton = new JButton("Add Server");
+        serverListModel = new DefaultListModel<>();
+        JList<String> serverList = new JList<>(serverListModel);
 
-        // Crear campos para ingresar los datos del servidor
-        JPanel formPanel = new JPanel(new GridLayout(3, 2));
-        formPanel.add(new JLabel("Server Name:"));
-        serverNameField = new JTextField();
-        formPanel.add(serverNameField);
+        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+        add(new JLabel("Server Name:"));
+        add(serverNameField);
+        add(addButton);
+        add(new JScrollPane(serverList));
 
-        formPanel.add(new JLabel("IP Address:"));
-        ipField = new JTextField();
-        formPanel.add(ipField);
-
-        formPanel.add(new JLabel("Operating System:"));
-        osField = new JTextField();
-        formPanel.add(osField);
-
-        add(formPanel, BorderLayout.CENTER);
-
-        // Botón para guardar el servidor
-        saveButton = new JButton("Register Server");
-        add(saveButton, BorderLayout.SOUTH);
-
-        // Área de texto para mostrar los servidores registrados
-        displayArea = new JTextArea(10, 30);
-        add(new JScrollPane(displayArea), BorderLayout.EAST);
-
-        // Acción del botón para registrar el servidor
-        saveButton.addActionListener(new ActionListener() {
+        // Action for adding the server
+        addButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                registerServer();
+                addServer(); // Uncomment this line to trigger the server addition logic
+                System.out.println("hola"); // This should print "hola" to the console
             }
         });
     }
-
-    private void registerServer() {
-        // Obtener los datos ingresados
-        String serverName = serverNameField.getText();
-        String ip = ipField.getText();
-        String os = osField.getText();
-
-        // Validar los campos (esto se puede extender con más validaciones)
-        if (serverName.isEmpty() || ip.isEmpty() || os.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Please fill all the fields");
-            return;
+    private void addServer() {
+        String serverName = serverNameField.getText().trim() + "\n";
+        System.out.println("Entrada");
+        if (!serverName.isEmpty() && !registeredServers.contains(serverName)) {
+            registeredServers.add(serverName);
+            serverListModel.addElement(serverName);
+            serverNameField.setText("");
+            System.out.println("Lol");
+       //     writeToFile(serverName);
         }
+    }
 
-        // Guardar la información (puede ser en un archivo o base de datos)
-        // Aquí lo mostramos en el área de texto por simplicidad
-        displayArea.append("Server Registered: \n");
-        displayArea.append("Name: " + serverName + "\n");
-        displayArea.append("IP: " + ip + "\n");
-        displayArea.append("OS: " + os + "\n\n");
+    public List<String> getRegisteredServers() {
+        return registeredServers;
+    }
 
-        // Limpiar los campos
-        serverNameField.setText("");
-        ipField.setText("");
-        osField.setText("");
+    // Main method to test the panel
+    public static void main(String[] args) {
+        JFrame frame = new JFrame("Server Panel Tessdfghjt");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(400, 300);
+
+        ServerPanel panel = new ServerPanel();
+        frame.add(panel);
+
+        frame.setVisible(true);
     }
 }

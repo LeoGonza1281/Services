@@ -2,6 +2,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.FileWriter;
 import java.util.List;
 
 public class ServiceListPanel extends JPanel {
@@ -44,16 +46,33 @@ public class ServiceListPanel extends JPanel {
     private void addSelectedServices() {
         // Obtener los servicios seleccionados
         List<String> selectedServices = servicesList.getSelectedValuesList();
+        System.out.println("dsdsajkajkkjdsakjsadsak");
         if (selectedServices.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Please select at least one service");
             return;
         }
 
+
         // Mostrar los servicios seleccionados
         for (String service : selectedServices) {
             selectedServicesArea.append(service + "\n");
+            writeToFile(service + "\n");
         }
 
         // Aquí podrías guardar la lista de servicios para usarla más tarde
     }
+    private void writeToFile(String serverName) {
+        String serversFileName = "ServersFile.txt";
+        try {
+            System.out.println("Vamos a escribir al archivo");
+            File serverFile = new File(serversFileName);
+            FileWriter writer = new FileWriter(serverFile, true); // Append mode
+            writer.write(serverName);
+            writer.close();
+            System.out.println("Finish writing the file");
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
 }

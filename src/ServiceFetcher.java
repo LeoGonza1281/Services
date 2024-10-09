@@ -10,7 +10,7 @@ public class ServiceFetcher {
         List<String> services = new ArrayList<>();
 
         // Aquí deberías reemplazar este comando con el que te permita obtener tus servicios.
-        String command = "\"Get-Service | Select-Object Status,Name,DisplayName | Format-Table -AutoSize\";"; // Para PowerShell
+        String command = "\"Get-Service | Select-Object Name | Format-Table -AutoSize\";"; // Para PowerShell
 
         try {
             // Ejecutar el comando en PowerShell

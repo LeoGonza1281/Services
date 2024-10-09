@@ -62,6 +62,8 @@ public class Main extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 cardLayout.show(mainPanel, "Create ServiceList");
+                createEmptyTextFile("ServersList.txt");
+                System.out.println("Archivo creado correctamente");
             }
         });
 

@@ -8,76 +8,48 @@ import java.util.List;
 
 public class ServerPanel extends JPanel {
     private List<String> registeredServers;
-    private JTextField serverNameField;
     private JButton selectEnvButton, addButton, editButton;
-    private DefaultListModel<String> serverListModel;
     private JTextArea documentTextArea;
-    private String fileName; // Archivo de texto seleccionado
+    private String fileName;
 
     public ServerPanel() {
         registeredServers = new ArrayList<>();
-        serverNameField = new JTextField(15); // Aquí es donde se ingresa el servidor
 
         // Crear botones
         selectEnvButton = new JButton("Select Environment");
         addButton = new JButton("Add server");
         editButton = new JButton("Edit server");
 
-        // Establecer el mismo tamaño para todos los botones
-        Dimension buttonSize = new Dimension(150, 30); // Definir un tamaño fijo
+        // Establecer tamaño para los botones
+        Dimension buttonSize = new Dimension(150, 30);
         selectEnvButton.setPreferredSize(buttonSize);
-        selectEnvButton.setMinimumSize(buttonSize);
-        selectEnvButton.setMaximumSize(buttonSize);
-
         addButton.setPreferredSize(buttonSize);
-        addButton.setMinimumSize(buttonSize);
-        addButton.setMaximumSize(buttonSize);
-
         editButton.setPreferredSize(buttonSize);
-        editButton.setMinimumSize(buttonSize);
-        editButton.setMaximumSize(buttonSize);
 
-        // Usar un panel con BoxLayout para alinear los botones
+        // Panel para botones
         JPanel buttonPanel = new JPanel();
         buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.Y_AXIS));
         buttonPanel.add(selectEnvButton);
-        buttonPanel.add(Box.createRigidArea(new Dimension(0, 10))); // Espacio entre botones
+        buttonPanel.add(Box.createRigidArea(new Dimension(0, 10)));
         buttonPanel.add(addButton);
-        buttonPanel.add(Box.createRigidArea(new Dimension(0, 10))); // Espacio entre botones
+        buttonPanel.add(Box.createRigidArea(new Dimension(0, 10)));
         buttonPanel.add(editButton);
 
-        serverListModel = new DefaultListModel<>();
-        JList<String> serverList = new JList<>(serverListModel);
-
-        // Usar BorderLayout para dividir la pantalla
+        // Layout principal
         setLayout(new BorderLayout());
-
-        // Añadir panel de botones a la izquierda
         add(buttonPanel, BorderLayout.WEST);
 
-        // Crear un área de texto para el documento
-        documentTextArea = new JTextArea(20, 30); // Área de texto con un ancho ajustado
-        JScrollPane scrollPane = new JScrollPane(documentTextArea); // Añadir scroll al área de texto
+        // Área de texto
+        documentTextArea = new JTextArea(20, 30);
+        JScrollPane scrollPane = new JScrollPane(documentTextArea);
         add(scrollPane, BorderLayout.CENTER);
 
-        // Acción para seleccionar el entorno
-        selectEnvButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                selectEnvironment();
-            }
-        });
-
-        // Acción para añadir servidor
-        addButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                addServerToTextAreaAndFile(); // Agregar texto al JTextArea y al archivo
-            }
-        });
+        // Acciones de los botones
+        selectEnvButton.addActionListener(e -> selectEnvironment());
+        addButton.addActionListener(e -> addServerToFile());
+        editButton.addActionListener(e -> openEditServerWindow());
     }
 
-    // Seleccionar el entorno (archivo de texto)
     private void selectEnvironment() {
         String[] options = {"Developing", "Preproduction", "Production"};
         int choice = JOptionPane.showOptionDialog(
@@ -105,51 +77,14 @@ public class ServerPanel extends JPanel {
                 return;
         }
 
-        // Limpiar el área de texto y cargar el archivo seleccionado
         documentTextArea.setText("");
         loadTextFileContent();
+        JOptionPane.showMessageDialog(this, "Selected environment: " + fileName);
     }
 
-    // Agrega el texto ingresado al JTextArea y al archivo de texto
-    private void addServerToTextAreaAndFile() {
-        if (fileName == null) {
-            JOptionPane.showMessageDialog(this, "Please select an environment first.");
-            return;
-        }
-
-        String serverName = serverNameField.getText().trim();
-        if (!serverName.isEmpty()) {
-            // Añadir el servidor al JTextArea
-            documentTextArea.append(serverName + "\n");
-
-            // Limpiar el campo de texto
-            serverNameField.setText("");
-
-            // También añadir al archivo de texto
-            appendToTextFile(serverName);
-        }
-    }
-
-    // Añade contenido al archivo de texto seleccionado
-    private void appendToTextFile(String content) {
-        File file = new File(fileName);
-        System.out.println("Attempting to write to file: " + file.getAbsolutePath()); // Línea de depuración
-
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(file, true))) {
-            writer.write(content);
-            writer.newLine(); // Añadir nueva línea
-            System.out.println("Server added: " + content); // Línea de depuración
-        } catch (IOException e) {
-            JOptionPane.showMessageDialog(this, "Error writing to file: " + e.getMessage());
-            e.printStackTrace();
-        }
-    }
-
-    // Carga el contenido del archivo de texto en el JTextArea
     private void loadTextFileContent() {
         if (fileName == null) return;
 
-        // Leer el archivo y mostrar su contenido en el JTextArea
         try (BufferedReader reader = new BufferedReader(new FileReader(fileName))) {
             String line;
             while ((line = reader.readLine()) != null) {
@@ -159,7 +94,140 @@ public class ServerPanel extends JPanel {
             JOptionPane.showMessageDialog(this, "File not found: " + fileName);
         } catch (IOException e) {
             JOptionPane.showMessageDialog(this, "Error reading file: " + e.getMessage());
-            e.printStackTrace();
+        }
+    }
+
+    private void addServerToFile() {
+        if (fileName == null) {
+            JOptionPane.showMessageDialog(this, "Please select an environment first.");
+            return;
+        }
+
+        JPanel inputPanel = new JPanel(new GridLayout(1, 2));
+        JTextField serverNameField = new JTextField();
+        inputPanel.add(new JLabel("Server Name:"));
+        inputPanel.add(serverNameField);
+
+        int result = JOptionPane.showConfirmDialog(this, inputPanel, "Add Server", JOptionPane.OK_CANCEL_OPTION);
+        if (result == JOptionPane.OK_OPTION) {
+            String serverName = serverNameField.getText().trim();
+
+            if (!serverName.isEmpty()) {
+                String contentToAdd = "Server: " + serverName;
+                documentTextArea.append(contentToAdd + "\n");
+                appendToTextFile(contentToAdd);
+            } else {
+                JOptionPane.showMessageDialog(this, "Please enter the server name.");
+            }
+        }
+    }
+
+    private void appendToTextFile(String content) {
+        File file = new File(fileName);
+
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(file, true))) {
+            writer.write(content);
+            writer.newLine();
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(this, "Error writing to file: " + e.getMessage());
+        }
+    }
+
+    // Abrir ventana para editar servidores
+    private void openEditServerWindow() {
+        if (fileName == null) {
+            JOptionPane.showMessageDialog(this, "Please select an environment first.");
+            return;
+        }
+
+        List<String> servers = loadServersFromFile();
+        if (servers.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "No servers found to edit.");
+            return;
+        }
+
+        // Crear la ventana para editar servidores
+        JFrame editFrame = new JFrame("Edit Servers");
+        editFrame.setSize(400, 300);
+        editFrame.setLayout(new BorderLayout());
+
+        // Crear la lista de servidores
+        JList<String> serverList = new JList<>(servers.toArray(new String[0]));
+        JScrollPane scrollPane = new JScrollPane(serverList);
+        editFrame.add(scrollPane, BorderLayout.CENTER);
+
+        // Panel inferior con botón "Save"
+        JPanel bottomPanel = new JPanel();
+        JButton saveButton = new JButton("Save");
+        bottomPanel.add(saveButton);
+        editFrame.add(bottomPanel, BorderLayout.SOUTH);
+
+        // Acción del botón Save
+        saveButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Obtener el servidor seleccionado
+                String selectedServer = serverList.getSelectedValue();
+                if (selectedServer != null) {
+                    // Permitir editar el servidor seleccionado
+                    String newServerName = JOptionPane.showInputDialog(editFrame, "Edit Server Name:", selectedServer);
+                    if (newServerName != null && !newServerName.trim().isEmpty()) {
+                        updateServerInFile(selectedServer, newServerName.trim());
+                        documentTextArea.setText(""); // Limpiar el área de texto
+                        loadTextFileContent(); // Recargar el contenido actualizado
+                        editFrame.dispose(); // Cerrar la ventana de edición
+                    }
+                }
+            }
+        });
+
+        editFrame.setVisible(true);
+    }
+
+    // Cargar servidores del archivo de texto
+    private List<String> loadServersFromFile() {
+        List<String> servers = new ArrayList<>();
+        try (BufferedReader reader = new BufferedReader(new FileReader(fileName))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                if (line.startsWith("Server:")) {
+                    servers.add(line);
+                }
+            }
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(this, "Error reading file: " + e.getMessage());
+        }
+        return servers;
+    }
+
+    // Actualizar el archivo de texto con el nuevo nombre del servidor
+    private void updateServerInFile(String oldServer, String newServer) {
+        File file = new File(fileName);
+        List<String> updatedLines = new ArrayList<>();
+
+        // Leer todas las líneas del archivo
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                if (line.equals(oldServer)) {
+                    updatedLines.add("Server: " + newServer);
+                } else {
+                    updatedLines.add(line);
+                }
+            }
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(this, "Error reading file: " + e.getMessage());
+            return;
+        }
+
+        // Escribir las líneas actualizadas de nuevo en el archivo
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
+            for (String updatedLine : updatedLines) {
+                writer.write(updatedLine);
+                writer.newLine();
+            }
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(this, "Error writing to file: " + e.getMessage());
         }
     }
 

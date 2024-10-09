@@ -158,7 +158,7 @@ public class ServerPanel extends JPanel {
 
         // Panel inferior con botón "Save"
         JPanel bottomPanel = new JPanel();
-        JButton saveButton = new JButton("Save");
+        JButton saveButton = new JButton("Edit");
         bottomPanel.add(saveButton);
         editFrame.add(bottomPanel, BorderLayout.SOUTH);
 

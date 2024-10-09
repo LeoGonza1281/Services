@@ -15,43 +15,43 @@ public class Main extends JFrame {
     private ServerPanel serverPanel;
 
     public Main() {
-        // Configuración de la ventana principal
+        // Configure the main window (JFrame)
         setTitle("Server Management");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(600, 400);
-        setLocationRelativeTo(null);
+        setLocationRelativeTo(null); // Center the window
 
-        // Crear el CardLayout
+        // Create CardLayout for switching between panels
         cardLayout = new CardLayout();
         mainPanel = new JPanel(cardLayout);
 
-        // Crear los paneles
-        ButtonPanel buttonPanel = new ButtonPanel(); // Panel principal con botones
-        serverPanel = new ServerPanel(); // Panel para registrar servidores
-        startRunningPanel = new StartRunningPanel(serverPanel.getRegisteredServers()); // Panel para iniciar los servicios en los servidores
-        ServiceListPanel serviceListPanel = new ServiceListPanel(); // Panel para crear la lista de servicios
+        // Create individual panels
+        ButtonPanel buttonPanel = new ButtonPanel(); // Main panel with buttons
+        serverPanel = new ServerPanel(); // Panel for registering servers
+        startRunningPanel = new StartRunningPanel(serverPanel.getRegisteredServers()); // Panel to start services on servers
+        ServiceListPanel serviceListPanel = new ServiceListPanel(); // Panel for creating the service list
 
-        // Añadir los paneles al CardLayout
+        // Add panels to the CardLayout
         mainPanel.add(buttonPanel, "Home");
         mainPanel.add(serverPanel, "Setup Server");
         mainPanel.add(serviceListPanel, "Create ServiceList");
         mainPanel.add(startRunningPanel, "Start Running");
 
-        // Añadir el panel principal al JFrame
+        // Add the main panel to the JFrame
         add(mainPanel, BorderLayout.CENTER);
 
-        // Crear la barra de navegación
+        // Create the navigation bar (navbar)
         createNavbar();
 
-        // Mostrar el panel principal (Home)
+        // Show the main panel (Home) on startup
         cardLayout.show(mainPanel, "Home");
 
-        // Configurar la acción de los botones del ButtonPanel para cambiar entre los paneles
+        // Configure the actions of buttons in ButtonPanel to switch between panels
         buttonPanel.setupServerButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 cardLayout.show(mainPanel, "Setup Server");
-                // Llama a la función para crear los archivos de texto vacíos
+                // Create empty text files for the different environments when navigating to the Setup Server page
                 createEmptyTextFile("Developing.txt");
                 createEmptyTextFile("Preproduction.txt");
                 createEmptyTextFile("Production.txt");
@@ -62,82 +62,86 @@ public class Main extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 cardLayout.show(mainPanel, "Create ServiceList");
-                createEmptyTextFile("ServersList.txt");
-                System.out.println("Archivo creado correctamente");
+                createEmptyTextFile("ServersList.txt"); // Create an empty server list file
+                System.out.println("File created successfully");
             }
         });
 
         buttonPanel.startRunningButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Antes de mostrar el panel Start Running, actualizamos la lista de servidores
+                // Update the list of servers before showing the Start Running panel
                 startRunningPanel.updateServerList(serverPanel.getRegisteredServers());
                 cardLayout.show(mainPanel, "Start Running");
             }
         });
     }
 
-    // Método para crear un archivo vacío (si no existe) o sobrescribirlo si ya existe
+    // Method to create an empty text file (or overwrite if it already exists)
     private void createEmptyTextFile(String fileName) {
         File file = new File(fileName);
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
-            // No escribimos nada, simplemente creamos o vaciamos el archivo
-            System.out.println("Archivo creado/vaciado: " + fileName);
+            // No content is written; just create or clear the file
+            System.out.println("File created/emptied: " + fileName);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    // Crear la barra de navegación
+    // Create the navigation bar
     private void createNavbar() {
-        JPanel navbar = new JPanel(new FlowLayout(FlowLayout.LEFT)); // Alinear a la izquierda
+        JPanel navbar = new JPanel(new FlowLayout(FlowLayout.LEFT)); // Align navbar to the left
 
-        // Definir el color morado de fondo para la barra de navegación
+        // Set a purple background color for the navbar
         navbar.setBackground(Color.decode("#830051"));
 
-        // Botón para volver a Home
+        // Button to navigate back to the Home page
         JButton homeButton = new JButton("Home");
-        homeButton.setForeground(Color.WHITE);
-        homeButton.setBackground(Color.decode("#830051"));
-        homeButton.setBorderPainted(false); // Sin bordes para darle un estilo plano
-        homeButton.setFocusPainted(false); // Quitar el borde de enfoque
+        homeButton.setForeground(Color.WHITE); // White text
+        homeButton.setBackground(Color.decode("#830051")); // Purple background
+        homeButton.setBorderPainted(false); // No border for a flat style
+        homeButton.setFocusPainted(false); // Remove focus border
 
-        // Efecto reactivo para el botón "Home"
+        // Add hover effect for the "Home" button
         homeButton.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseEntered(java.awt.event.MouseEvent e) {
-                homeButton.setBackground(Color.decode("#a03b7e")); // Color un poco más claro
-                homeButton.setForeground(Color.decode("#e0e0e0")); // Color del texto más claro
+                // Lighten background and text color when hovering
+                homeButton.setBackground(Color.decode("#a03b7e"));
+                homeButton.setForeground(Color.decode("#e0e0e0"));
             }
 
             @Override
             public void mouseExited(java.awt.event.MouseEvent e) {
+                // Revert to original color when not hovering
                 homeButton.setBackground(Color.decode("#830051"));
                 homeButton.setForeground(Color.WHITE);
             }
         });
 
+        // Action to switch back to the Home panel when the button is clicked
         homeButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 cardLayout.show(mainPanel, "Home");
             }
         });
+
+        // Add the Home button to the navbar
         navbar.add(homeButton);
 
-        // Añadir la barra de navegación al JFrame
+        // Add the navbar to the JFrame at the top (NORTH)
         add(navbar, BorderLayout.NORTH);
     }
 
-    // Método principal para ejecutar la aplicación
+    // Main method to run the application
     public static void main(String[] args) {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
                 Main app = new Main();
-                app.setVisible(true);
+                app.setVisible(true); // Display the window
             }
         });
-
     }
 }

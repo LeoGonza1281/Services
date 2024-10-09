@@ -2,6 +2,10 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 
 public class Main extends JFrame {
 
@@ -47,6 +51,10 @@ public class Main extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 cardLayout.show(mainPanel, "Setup Server");
+                // Llama a la función para crear los archivos de texto vacíos
+                createEmptyTextFile("Developing.txt");
+                createEmptyTextFile("Preproduction.txt");
+                createEmptyTextFile("Production.txt");
             }
         });
 
@@ -65,6 +73,17 @@ public class Main extends JFrame {
                 cardLayout.show(mainPanel, "Start Running");
             }
         });
+    }
+
+    // Método para crear un archivo vacío (si no existe) o sobrescribirlo si ya existe
+    private void createEmptyTextFile(String fileName) {
+        File file = new File(fileName);
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
+            // No escribimos nada, simplemente creamos o vaciamos el archivo
+            System.out.println("Archivo creado/vaciado: " + fileName);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     // Crear la barra de navegación
@@ -117,5 +136,6 @@ public class Main extends JFrame {
                 app.setVisible(true);
             }
         });
+
     }
 }

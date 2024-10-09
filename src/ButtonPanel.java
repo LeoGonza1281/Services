@@ -39,6 +39,7 @@ public class ButtonPanel extends JPanel {
         createReportButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                System.out.println(e.getSource());
                 createReport();
             }
         });

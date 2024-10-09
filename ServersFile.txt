@@ -1,0 +1,24 @@
+Running A180AA                                    A180AA                                                               
+Running A180WD                                    A180WD                                                               
+Stopped AarSvc_ab2ae2                             Agent Activation Runtime_ab2ae2                                      
+Running AdobeARMservice                           Adobe Acrobat Update Service                                         
+Stopped AJRouter                                  AllJoyn Router Service                                               
+Stopped ALG                                       Application Layer Gateway Service                                    
+Running AMD Crash Defender Service                AMD Crash Defender Service                                           
+Running AMD External Events Utility               AMD External Events Utility                                          
+Stopped AppIDSvc                                  Application Identity                                                 
+Running Appinfo                                   Application Information                                              
+Stopped AppMgmt                                   Application Management                                               
+Stopped AppReadiness                              App Readiness                                                        
+Running AppVClient                                Microsoft App-V Client                                               
+Running AppXSvc                                   AppX Deployment Service (AppXSVC)                                    
+Stopped AssignedAccessManagerSvc                  AssignedAccessManager Service                                        
+Running AudioEndpointBuilder                      Windows Audio Endpoint Builder                                       
+Running Audiosrv                                  Windows Audio                                                        
+Stopped autotimesvc                               Cellular Time                                                        
+Stopped AxInstSV                                  ActiveX Installer (AxInstSV)                                         
+Running AzureAttestService                        AzureAttestService                                                   
+Stopped BarcoClickShareAutorunService             Barco ClickShare Autorun Service                                     
+Stopped BcastDVRUserService_ab2ae2                GameDVR and Broadcast User Service_ab2ae2                            
+Running BDESVC                                    BitLocker Drive Encryption Service                                   
+Running BFE                                       Base Filtering Engine                                                

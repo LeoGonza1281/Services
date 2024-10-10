@@ -22,7 +22,7 @@ public class StartRunningPanel extends JPanel {
         add(serverPanel, BorderLayout.NORTH);
 
         // ComboBox de ambientes (Desarrollo, Preproducción, Producción)
-        String[] environments = {"Developing", "Preproductión", "Productión", "All Environments"};
+        String[] environments = {"Development", "Preproductión", "Productión", "All Environments"};
         environmentComboBox = new JComboBox<>(environments);
         JPanel environmentPanel = new JPanel(new FlowLayout());
         environmentPanel.add(new JLabel("Select Environment:"));

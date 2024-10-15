@@ -6,7 +6,6 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.List;
 
 public class Main extends JFrame {
 
@@ -14,7 +13,6 @@ public class Main extends JFrame {
     private JPanel mainPanel;
     private StartRunningPanel startRunningPanel;
     private ServerPanel serverPanel;
-    private ServerListPanel serverListPanel; // Añadimos el panel de lista de servidores
 
     public Main() {
         // Configuración principal de la ventana
@@ -29,15 +27,13 @@ public class Main extends JFrame {
 
         // Crear los paneles individuales
         ButtonPanel buttonPanel = new ButtonPanel(); // Panel principal con los botones
-        serverPanel = new ServerPanel(); // Panel para registrar servidores
-        serverListPanel = new ServerListPanel(); // Panel para mostrar la lista de servidores
+        serverPanel = new ServerPanel(cardLayout, mainPanel); // Pasar cardLayout y mainPanel al ServerPanel
         startRunningPanel = new StartRunningPanel(); // Panel para iniciar servicios en los servidores
         ServiceListPanel serviceListPanel = new ServiceListPanel(); // Panel para crear la lista de servicios
 
         // Añadir los paneles al CardLayout
         mainPanel.add(buttonPanel, "Home");
         mainPanel.add(serverPanel, "Setup Server");
-        mainPanel.add(serverListPanel, "Server List");
         mainPanel.add(serviceListPanel, "Create ServiceList");
         mainPanel.add(startRunningPanel, "Start Running");
 
@@ -55,9 +51,7 @@ public class Main extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 cardLayout.show(mainPanel, "Setup Server");
-
-                // Crear el archivo de texto de entornos si no existe
-                createEnvironmentsFile();
+                createEnvironmentsFile(); // Crear el archivo de entornos si no existe
             }
         });
 
@@ -65,17 +59,13 @@ public class Main extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 cardLayout.show(mainPanel, "Create ServiceList");
-                createEmptyTextFile("ServersList.txt"); // Crear un archivo de lista de servidores vacío
-                System.out.println("File created successfully");
+                System.out.println("Service List panel displayed without creating a file.");
             }
         });
 
         buttonPanel.startRunningButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Actualizar la lista de servidores antes de mostrar el panel Start Running
-                List<String> registeredServers = serverListPanel.getRegisteredServers(); // Obtener la lista de servidores
-                startRunningPanel.updateServerList(registeredServers); // Actualizar el panel de inicio
                 cardLayout.show(mainPanel, "Start Running");
             }
         });
@@ -86,7 +76,6 @@ public class Main extends JFrame {
         File file = new File("Environments.txt");
         if (!file.exists()) {
             try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
-                // Inicializar el archivo con un contenido básico si es necesario
                 writer.write("This file stores the environments.");
                 System.out.println("Environments.txt created.");
             } catch (IOException e) {
@@ -94,16 +83,6 @@ public class Main extends JFrame {
             }
         } else {
             System.out.println("Environments.txt already exists. Not creating a new one.");
-        }
-    }
-
-    // Método para crear un archivo de texto vacío (o sobrescribir si ya existe)
-    private void createEmptyTextFile(String fileName) {
-        File file = new File(fileName);
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
-            System.out.println("File created/emptied: " + fileName);
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 

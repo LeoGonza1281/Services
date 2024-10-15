@@ -17,10 +17,16 @@ public class ServerPanel extends JPanel {
     private JComboBox<String> environmentComboBox;
     private JButton switchPanelButton;
     private List<String> environments; // Para almacenar los entornos creados
+    private CardLayout cardLayout; // Añadido para manejar el cambio de panel
+    private JPanel mainPanel; // Añadido para el panel principal
+    private GroupServerPanel groupServerPanel; // Añadido para el panel de grupos y servidores
 
-    public ServerPanel() {
+    public ServerPanel(CardLayout cardLayout, JPanel mainPanel) {
+        this.cardLayout = cardLayout; // Inicializa el CardLayout
+        this.mainPanel = mainPanel; // Inicializa el panel principal
         environments = new ArrayList<>();
         loadEnvironmentsFromFile(); // Cargar entornos al iniciar el panel
+        groupServerPanel = new GroupServerPanel(); // Inicializa el GroupServerPanel
 
         // Cuadro de texto para el nombre del entorno
         environmentTextField = new JTextField(15);
@@ -49,12 +55,12 @@ public class ServerPanel extends JPanel {
             }
         });
 
-        // Botón para cambiar a panel de servidores
-        switchPanelButton = new JButton("Switch to Server Panel");
+        // Botón para cambiar al panel de grupos y servidores
+        switchPanelButton = new JButton("Switch to Group and Server Panel");
         switchPanelButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                switchToServerPanel();
+                switchToGroupServerPanel(); // Cambia al panel de grupos y servidores
             }
         });
 
@@ -126,10 +132,11 @@ public class ServerPanel extends JPanel {
         }
     }
 
-    private void switchToServerPanel() {
-        // Lógica para cambiar al panel de servidores
-        // Aquí deberías implementar la lógica para crear y mostrar el nuevo panel
-        System.out.println("Switching to Server Panel...");
+    private void switchToGroupServerPanel() {
+        // Cambia al panel de grupos y servidores utilizando el CardLayout
+        mainPanel.add(groupServerPanel, "GroupServerPanel"); // Añadir el panel al mainPanel
+        cardLayout.show(mainPanel, "GroupServerPanel"); // Mostrar el panel de grupos y servidores
+        System.out.println("Switching to Group and Server Panel...");
     }
 
     public List<String> getRegisteredEnvironments() {

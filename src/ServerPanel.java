@@ -4,6 +4,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -19,7 +20,7 @@ public class ServerPanel extends JPanel {
 
     public ServerPanel() {
         environments = new ArrayList<>();
-        loadExistingEnvironments(); // Cargar entornos existentes al inicializar
+        loadEnvironmentsFromFile(); // Cargar entornos al iniciar el panel
 
         // Cuadro de texto para el nombre del entorno
         environmentTextField = new JTextField(15);
@@ -28,7 +29,7 @@ public class ServerPanel extends JPanel {
         // Dropdown para seleccionar entornos
         environmentComboBox = new JComboBox<>();
 
-        // Agregar los entornos existentes al JComboBox
+        // Llenar el JComboBox con los entornos existentes
         for (String env : environments) {
             environmentComboBox.addItem(env);
         }
@@ -63,35 +64,40 @@ public class ServerPanel extends JPanel {
         add(switchPanelButton, BorderLayout.SOUTH);
     }
 
-    private void loadExistingEnvironments() {
-        try (BufferedReader reader = new BufferedReader(new FileReader("Environments.txt"))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                environments.add(line.trim());
+    private void loadEnvironmentsFromFile() {
+        File file = new File("Environments.txt");
+        if (file.exists()) {
+            try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    environments.add(line.trim());
+                }
+            } catch (IOException e) {
+                JOptionPane.showMessageDialog(this, "Error loading environments from file: " + e.getMessage());
             }
-        } catch (IOException e) {
-            JOptionPane.showMessageDialog(this, "Error loading environments: " + e.getMessage());
         }
     }
 
     private void createEnvironment() {
         String environmentName = environmentTextField.getText().trim();
 
-        if (!environmentName.isEmpty() && !environments.contains(environmentName)) {
-            environments.add(environmentName);
-            environmentComboBox.addItem(environmentName);
-            environmentTextField.setText(""); // Limpiar el cuadro de texto
+        if (!environmentName.isEmpty()) {
+            // Verificar si el entorno ya existe
+            if (!environments.contains(environmentName)) {
+                environments.add(environmentName);
+                environmentComboBox.addItem(environmentName);
+                environmentTextField.setText(""); // Limpiar el cuadro de texto
 
-            // Guardar el entorno en el archivo Environments.txt
-            saveEnvironmentToFile(environmentName);
+                // Guardar el entorno en el archivo Environments.txt
+                saveEnvironmentToFile(environmentName);
 
-            // Crear un archivo de texto para el nuevo entorno
-            createEnvironmentFile(environmentName);
+                // Crear un archivo de texto para el nuevo entorno
+                createEnvironmentFile(environmentName);
+            } else {
+                JOptionPane.showMessageDialog(this, "Environment already exists.");
+            }
         } else {
-            String message = environments.contains(environmentName)
-                    ? "Environment already exists."
-                    : "Please enter a valid environment name.";
-            JOptionPane.showMessageDialog(this, message);
+            JOptionPane.showMessageDialog(this, "Please enter a valid environment name.");
         }
     }
 
@@ -105,11 +111,18 @@ public class ServerPanel extends JPanel {
     }
 
     private void createEnvironmentFile(String environmentName) {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(environmentName + ".txt"))) {
-            writer.write("This is the environment file for: " + environmentName);
-            writer.newLine(); // Puedes agregar más contenido aquí si es necesario
-        } catch (IOException e) {
-            JOptionPane.showMessageDialog(this, "Error creating environment file: " + e.getMessage());
+        File environmentFile = new File(environmentName + ".txt");
+
+        // Verifica si el archivo ya existe
+        if (!environmentFile.exists()) {
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(environmentFile))) {
+                writer.write("This is the environment file for: " + environmentName);
+                writer.newLine(); // Puedes agregar más contenido aquí si es necesario
+            } catch (IOException e) {
+                JOptionPane.showMessageDialog(this, "Error creating environment file: " + e.getMessage());
+            }
+        } else {
+            JOptionPane.showMessageDialog(this, "File for this environment already exists.");
         }
     }
 

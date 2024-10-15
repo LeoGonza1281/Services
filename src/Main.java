@@ -56,8 +56,8 @@ public class Main extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 cardLayout.show(mainPanel, "Setup Server");
 
-                // Crear archivos de texto vacíos para los diferentes entornos
-                createEmptyTextFile("Environments.txt");
+                // Crear el archivo de texto de entornos si no existe
+                createEnvironmentsFile();
             }
         });
 
@@ -79,6 +79,22 @@ public class Main extends JFrame {
                 cardLayout.show(mainPanel, "Start Running");
             }
         });
+    }
+
+    // Método para crear el archivo de texto de entornos solo si no existe
+    private void createEnvironmentsFile() {
+        File file = new File("Environments.txt");
+        if (!file.exists()) {
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
+                // Inicializar el archivo con un contenido básico si es necesario
+                writer.write("This file stores the environments.");
+                System.out.println("Environments.txt created.");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        } else {
+            System.out.println("Environments.txt already exists. Not creating a new one.");
+        }
     }
 
     // Método para crear un archivo de texto vacío (o sobrescribir si ya existe)

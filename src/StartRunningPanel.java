@@ -10,19 +10,18 @@ public class StartRunningPanel extends JPanel {
     private JRadioButton secondaryButton;
     private ButtonGroup serviceGroup;
 
-
-    public StartRunningPanel(List<String> availableServers) {
+    public StartRunningPanel() {
         setLayout(new BorderLayout());
 
         // ComboBox de servidores
-        serverComboBox = new JComboBox<>(availableServers.toArray(new String[0]));
+        serverComboBox = new JComboBox<>();
         JPanel serverPanel = new JPanel(new FlowLayout());
         serverPanel.add(new JLabel("Select Server:"));
         serverPanel.add(serverComboBox);
         add(serverPanel, BorderLayout.NORTH);
 
         // ComboBox de ambientes (Desarrollo, Preproducción, Producción)
-        String[] environments = {"Development", "Preproductión", "Productión", "All Environments"};
+        String[] environments = {"Development", "Preproduction", "Production", "All Environments"};
         environmentComboBox = new JComboBox<>(environments);
         JPanel environmentPanel = new JPanel(new FlowLayout());
         environmentPanel.add(new JLabel("Select Environment:"));
@@ -48,8 +47,6 @@ public class StartRunningPanel extends JPanel {
         rolePanel.add(primaryButton);
         rolePanel.add(secondaryButton);
         add(rolePanel, BorderLayout.EAST);
-
-        // Puedes agregar más elementos aquí, como un botón de confirmación
     }
 
     // Método para actualizar la lista de servidores cuando se registra un nuevo servidor

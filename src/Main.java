@@ -14,6 +14,7 @@ public class Main extends JFrame {
     private JPanel mainPanel;
     private StartRunningPanel startRunningPanel;
     private ServerPanel serverPanel;
+    private ServerListPanel serverListPanel; // Añadimos el panel de lista de servidores
 
     public Main() {
         // Configuración principal de la ventana
@@ -29,12 +30,14 @@ public class Main extends JFrame {
         // Crear los paneles individuales
         ButtonPanel buttonPanel = new ButtonPanel(); // Panel principal con los botones
         serverPanel = new ServerPanel(); // Panel para registrar servidores
-        startRunningPanel = new StartRunningPanel(serverPanel.getRegisteredServers()); // Panel para iniciar servicios en los servidores
+        serverListPanel = new ServerListPanel(); // Panel para mostrar la lista de servidores
+        startRunningPanel = new StartRunningPanel(); // Panel para iniciar servicios en los servidores
         ServiceListPanel serviceListPanel = new ServiceListPanel(); // Panel para crear la lista de servicios
 
         // Añadir los paneles al CardLayout
         mainPanel.add(buttonPanel, "Home");
         mainPanel.add(serverPanel, "Setup Server");
+        mainPanel.add(serverListPanel, "Server List");
         mainPanel.add(serviceListPanel, "Create ServiceList");
         mainPanel.add(startRunningPanel, "Start Running");
 
@@ -54,18 +57,7 @@ public class Main extends JFrame {
                 cardLayout.show(mainPanel, "Setup Server");
 
                 // Crear archivos de texto vacíos para los diferentes entornos
-                createEmptyTextFile("Development.txt");
-                createEmptyTextFile("Preproduction.txt");
-                createEmptyTextFile("Production.txt");
-
-                // Ejecutar el script PowerShell al presionar el botón "Setup Server"
-                List<String> registeredServers = serverPanel.getRegisteredServers();
-                if (!registeredServers.isEmpty()) {
-                    PowerShellExecutor executor = new PowerShellExecutor();
-                    executor.executePowerShellScript(registeredServers, "C:\\Scripts\\DiskCollect.ps1");
-                } else {
-                    System.out.println("No servers registered.");
-                }
+                createEmptyTextFile("Environments.txt");
             }
         });
 
@@ -82,7 +74,8 @@ public class Main extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 // Actualizar la lista de servidores antes de mostrar el panel Start Running
-                startRunningPanel.updateServerList(serverPanel.getRegisteredServers());
+                List<String> registeredServers = serverListPanel.getRegisteredServers(); // Obtener la lista de servidores
+                startRunningPanel.updateServerList(registeredServers); // Actualizar el panel de inicio
                 cardLayout.show(mainPanel, "Start Running");
             }
         });

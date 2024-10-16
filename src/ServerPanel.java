@@ -2,12 +2,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,9 +12,9 @@ public class ServerPanel extends JPanel {
     private JComboBox<String> environmentComboBox;
     private JButton switchPanelButton;
     private List<String> environments; // Para almacenar los entornos creados
-    private CardLayout cardLayout; // Añadido para manejar el cambio de panel
-    private JPanel mainPanel; // Añadido para el panel principal
-    private GroupServerPanel groupServerPanel; // Añadido para el panel de grupos y servidores
+    private CardLayout cardLayout; // Para manejar el cambio de panel
+    private JPanel mainPanel; // Panel principal
+    private GroupServerPanel groupServerPanel; // Panel de grupos y servidores
 
     public ServerPanel(CardLayout cardLayout, JPanel mainPanel) {
         this.cardLayout = cardLayout; // Inicializa el CardLayout
@@ -40,18 +35,29 @@ public class ServerPanel extends JPanel {
             environmentComboBox.addItem(env);
         }
 
-        // Panel para crear entornos
-        JPanel createEnvironmentPanel = new JPanel();
-        createEnvironmentPanel.add(new JLabel("Environment Name:"));
-        createEnvironmentPanel.add(environmentTextField);
-        createEnvironmentPanel.add(createEnvironmentButton);
-        createEnvironmentPanel.add(environmentComboBox);
+        // Panel para colocar los elementos en una misma línea
+        JPanel inputPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10)); // FlowLayout para poner en una línea
+
+        // Añadir el cuadro de texto, el botón y el dropdown al mismo panel
+        inputPanel.add(environmentTextField);
+        inputPanel.add(createEnvironmentButton);
+        inputPanel.add(environmentComboBox);
 
         // Agregar acción al botón de crear entorno
         createEnvironmentButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 createEnvironment();
+            }
+        });
+
+        // Acción para seleccionar el entorno desde el dropdown
+        environmentComboBox.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String selectedEnvironment = (String) environmentComboBox.getSelectedItem();
+                groupServerPanel.loadFileContent(selectedEnvironment + ".txt"); // Cargar contenido del archivo seleccionado
+                groupServerPanel.setEnvironmentName(selectedEnvironment); // Mostrar el nombre del entorno seleccionado
             }
         });
 
@@ -64,10 +70,10 @@ public class ServerPanel extends JPanel {
             }
         });
 
-        // Layout principal
+        // Layout principal: BorderLayout
         setLayout(new BorderLayout());
-        add(createEnvironmentPanel, BorderLayout.NORTH);
-        add(switchPanelButton, BorderLayout.SOUTH);
+        add(inputPanel, BorderLayout.CENTER); // Panel de entrada en el centro
+        add(switchPanelButton, BorderLayout.SOUTH); // Botón para cambiar de panel abajo
     }
 
     private void loadEnvironmentsFromFile() {

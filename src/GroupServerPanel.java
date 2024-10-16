@@ -1,7 +1,5 @@
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -9,9 +7,10 @@ import java.io.IOException;
 
 public class GroupServerPanel extends JPanel {
     private JTextArea textArea; // Área para mostrar el contenido del archivo
+    private JLabel environmentLabel; // Etiqueta para mostrar el nombre del entorno actual
 
     public GroupServerPanel() {
-        setLayout(new GridLayout(1, 2)); // Dos columnas
+        setLayout(new BorderLayout()); // Layout principal
 
         // Panel para Grupos y Servidores
         JPanel leftPanel = new JPanel();
@@ -52,9 +51,14 @@ public class GroupServerPanel extends JPanel {
         textArea.setEditable(false); // Hacer el área de texto no editable
         JScrollPane scrollPane = new JScrollPane(textArea); // Para hacer scroll
 
-        // Añadir ambos paneles al panel principal
-        add(leftPanel);
-        add(scrollPane);
+        // Etiqueta para mostrar el nombre del entorno actual
+        environmentLabel = new JLabel("No environment selected");
+        environmentLabel.setHorizontalAlignment(JLabel.CENTER); // Centrar el texto
+
+        // Añadir los componentes al panel principal
+        add(environmentLabel, BorderLayout.NORTH);
+        add(leftPanel, BorderLayout.WEST);
+        add(scrollPane, BorderLayout.CENTER);
     }
 
     // Método para cargar el contenido del archivo en el área de texto
@@ -73,5 +77,10 @@ public class GroupServerPanel extends JPanel {
         } else {
             textArea.setText("File does not exist."); // Mensaje si el archivo no existe
         }
+    }
+
+    // Método para establecer el nombre del entorno seleccionado
+    public void setEnvironmentName(String environmentName) {
+        environmentLabel.setText("Current Environment: " + environmentName);
     }
 }

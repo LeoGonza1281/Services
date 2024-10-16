@@ -3,11 +3,14 @@ import java.awt.*;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 
 public class GroupServerPanel extends JPanel {
     private JTextArea textArea; // Área para mostrar el contenido del archivo
     private JLabel environmentLabel; // Etiqueta para mostrar el nombre del entorno actual
+    private File currentGroupFile; // Archivo actual del grupo
+    private String currentEnvironment; // Nombre del entorno actual
 
     public GroupServerPanel() {
         setLayout(new BorderLayout()); // Layout principal
@@ -59,6 +62,50 @@ public class GroupServerPanel extends JPanel {
         add(environmentLabel, BorderLayout.NORTH);
         add(leftPanel, BorderLayout.WEST);
         add(scrollPane, BorderLayout.CENTER);
+
+        // Acción para el botón "Add" de Grupos
+        addGroupButton.addActionListener(e -> addGroup());
+
+        // Inicializar el entorno actual
+        currentEnvironment = "No environment selected"; // Valor inicial por defecto
+    }
+
+    // Método para agregar un nuevo grupo (archivo de texto)
+    private void addGroup() {
+        // Obtener el entorno actual
+        String environment = getCurrentEnvironment();
+
+        // Verificar que el entorno no sea "No environment selected"
+        if (environment.equals("No environment selected")) {
+            JOptionPane.showMessageDialog(this, "Please select an environment first.");
+            return;
+        }
+
+        // Pedir al usuario el número del grupo
+        String groupNumber = JOptionPane.showInputDialog(this, "Enter the group number:");
+        if (groupNumber != null && !groupNumber.trim().isEmpty()) {
+            // Formato cambiado a [Environment].Group[Numero].txt
+            String fileName = environment + ".Group" + groupNumber + ".txt";
+            currentGroupFile = new File(fileName);
+
+            try {
+                if (currentGroupFile.createNewFile()) {
+                    JOptionPane.showMessageDialog(this, "Group file created: " + fileName);
+                    loadFileContent(currentGroupFile.getPath()); // Cargar el archivo en el área de texto
+                } else {
+                    JOptionPane.showMessageDialog(this, "Group file already exists: " + fileName);
+                }
+            } catch (IOException ex) {
+                JOptionPane.showMessageDialog(this, "Error creating group file: " + ex.getMessage());
+            }
+        } else {
+            JOptionPane.showMessageDialog(this, "Invalid group number.");
+        }
+    }
+
+    // Método para obtener el entorno actual desde la etiqueta
+    private String getCurrentEnvironment() {
+        return environmentLabel.getText().replace("Current Environment: ", "").trim();
     }
 
     // Método para cargar el contenido del archivo en el área de texto
@@ -81,6 +128,7 @@ public class GroupServerPanel extends JPanel {
 
     // Método para establecer el nombre del entorno seleccionado
     public void setEnvironmentName(String environmentName) {
+        currentEnvironment = environmentName;
         environmentLabel.setText("Current Environment: " + environmentName);
     }
 }

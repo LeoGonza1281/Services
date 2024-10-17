@@ -76,7 +76,6 @@ public class Main extends JFrame {
         File file = new File("Environments.txt");
         if (!file.exists()) {
             try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
-                writer.write("This file stores the environments.");
                 System.out.println("Environments.txt created.");
             } catch (IOException e) {
                 e.printStackTrace();

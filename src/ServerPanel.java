@@ -101,10 +101,10 @@ public class ServerPanel extends JPanel {
                 environmentTextField.setText(""); // Limpiar el cuadro de texto
 
                 // Guardar el entorno en el archivo Environments.txt
-                saveEnvironmentToFile(environmentName);
+                saveEnvironmentToFile(environmentName); // Aquí se guarda el entorno en Environments.txt
 
                 // Crear un archivo de texto para el nuevo entorno
-                createEnvironmentFile(environmentName);
+                createEnvironmentFile(environmentName); // Aquí se crea el archivo .txt del entorno
             } else {
                 JOptionPane.showMessageDialog(this, "Environment already exists.");
             }
@@ -127,9 +127,13 @@ public class ServerPanel extends JPanel {
 
         // Verifica si el archivo ya existe
         if (!environmentFile.exists()) {
-            try (BufferedWriter writer = new BufferedWriter(new FileWriter(environmentFile))) {
-                writer.write("This is the environment file for: " + environmentName);
-                writer.newLine(); // Puedes agregar más contenido aquí si es necesario
+            try {
+                // Simplemente crea un archivo vacío sin escribir contenido automático
+                if (environmentFile.createNewFile()) {
+                    System.out.println("File for " + environmentName + " created successfully.");
+                } else {
+                    JOptionPane.showMessageDialog(this, "Could not create file for this environment.");
+                }
             } catch (IOException e) {
                 JOptionPane.showMessageDialog(this, "Error creating environment file: " + e.getMessage());
             }
@@ -137,6 +141,7 @@ public class ServerPanel extends JPanel {
             JOptionPane.showMessageDialog(this, "File for this environment already exists.");
         }
     }
+
 
     private void switchToGroupServerPanel() {
         // Cambia al panel de grupos y servidores utilizando el CardLayout

@@ -59,7 +59,7 @@ public class Main extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 cardLayout.show(mainPanel, "Create ServiceList");
-                System.out.println("Service List panel displayed without creating a file.");
+                createServiceListFile(); // Crear el archivo de lista de servicios si no existe
             }
         });
 
@@ -82,6 +82,20 @@ public class Main extends JFrame {
             }
         } else {
             System.out.println("Environments.txt already exists. Not creating a new one.");
+        }
+    }
+
+    // Método para crear el archivo List.txt solo si no existe
+    private void createServiceListFile() {
+        File file = new File("List.txt");
+        if (!file.exists()) {
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
+                System.out.println("List.txt created.");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        } else {
+            System.out.println("List.txt already exists. Not creating a new one.");
         }
     }
 

@@ -13,6 +13,7 @@ public class Main extends JFrame {
     private JPanel mainPanel;
     private StartRunningPanel startRunningPanel;
     private ServerPanel serverPanel;
+    private File appDirectory; // Directorio donde se guardarán los archivos
 
     public Main() {
         // Configuración principal de la ventana
@@ -20,6 +21,9 @@ public class Main extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(600, 400);
         setLocationRelativeTo(null); // Centrar ventana
+
+        // Crear el directorio de la aplicación
+        createAppDirectory();
 
         // Crear un CardLayout para cambiar entre los paneles
         cardLayout = new CardLayout();
@@ -51,7 +55,7 @@ public class Main extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 cardLayout.show(mainPanel, "Setup Server");
-                createEnvironmentsFile(); // Crear el archivo de entornos si no existe
+                createEnvironmentsFile("SetupServer"); // Crear el archivo en la nueva carpeta
             }
         });
 
@@ -59,7 +63,7 @@ public class Main extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 cardLayout.show(mainPanel, "Create ServiceList");
-                createServiceListFile(); // Crear el archivo de lista de servicios si no existe
+                createServiceListFile("CreateServiceList"); // Crear el archivo en la nueva carpeta
             }
         });
 
@@ -71,31 +75,70 @@ public class Main extends JFrame {
         });
     }
 
+    // Método para crear la carpeta "StartServices" en la carpeta de Documentos del usuario
+    private void createAppDirectory() {
+        // Obtener el directorio de documentos del usuario
+        String userHome = System.getProperty("user.home");
+        File documentsDir = new File(userHome, "Documents");
+
+        // Crear la carpeta StartServices en Documentos
+        appDirectory = new File(documentsDir, "StartServices");
+        if (!appDirectory.exists()) {
+            if (appDirectory.mkdir()) {
+                System.out.println("Directorio 'StartServices' creado en Documentos.");
+            } else {
+                System.err.println("No se pudo crear el directorio 'StartServices'.");
+            }
+        }
+        // Imprimir un mensaje indicando que el directorio ya existe o se ha creado
+        System.out.println("El directorio 'StartServices' está disponible en: " + appDirectory.getAbsolutePath());
+    }
+
     // Método para crear el archivo de texto de entornos solo si no existe
-    private void createEnvironmentsFile() {
-        File file = new File("Environments.txt");
+    private void createEnvironmentsFile(String folderName) {
+        // Crear una carpeta específica dentro de StartServices
+        File folder = new File(appDirectory, folderName);
+        if (!folder.exists()) {
+            if (folder.mkdir()) {
+                System.out.println("Carpeta '" + folderName + "' creada en StartServices.");
+            } else {
+                System.err.println("No se pudo crear la carpeta '" + folderName + "'.");
+            }
+        }
+
+        File file = new File(folder, "Environments.txt");
         if (!file.exists()) {
             try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
-                System.out.println("Environments.txt created.");
+                System.out.println("Environments.txt creado en " + folder.getAbsolutePath());
             } catch (IOException e) {
                 e.printStackTrace();
             }
         } else {
-            System.out.println("Environments.txt already exists. Not creating a new one.");
+            System.out.println("Environments.txt ya existe en " + folder.getAbsolutePath());
         }
     }
 
     // Método para crear el archivo List.txt solo si no existe
-    private void createServiceListFile() {
-        File file = new File("List.txt");
+    private void createServiceListFile(String folderName) {
+        // Crear una carpeta específica dentro de StartServices
+        File folder = new File(appDirectory, folderName);
+        if (!folder.exists()) {
+            if (folder.mkdir()) {
+                System.out.println("Carpeta '" + folderName + "' creada en StartServices.");
+            } else {
+                System.err.println("No se pudo crear la carpeta '" + folderName + "'.");
+            }
+        }
+
+        File file = new File(folder, "List.txt");
         if (!file.exists()) {
             try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
-                System.out.println("List.txt created.");
+                System.out.println("List.txt creado en " + folder.getAbsolutePath());
             } catch (IOException e) {
                 e.printStackTrace();
             }
         } else {
-            System.out.println("List.txt already exists. Not creating a new one.");
+            System.out.println("List.txt ya existe en " + folder.getAbsolutePath());
         }
     }
 

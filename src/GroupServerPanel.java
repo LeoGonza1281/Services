@@ -72,6 +72,15 @@ public class GroupServerPanel extends JPanel {
         currentEnvironment = "No environment selected"; // Valor inicial por defecto
     }
 
+    
+
+
+    // Método para establecer el nombre del entorno
+    void setEnvironmentName(String environmentName) {
+        this.currentEnvironment = environmentName;
+        environmentLabel.setText("Environment: " + environmentName); // Actualizar la etiqueta
+    }
+
     private void addGroup() {
         // Obtener el entorno actual
         String environment = getCurrentEnvironment();
@@ -87,7 +96,10 @@ public class GroupServerPanel extends JPanel {
         if (groupNumber != null && !groupNumber.trim().isEmpty()) {
             // Formato cambiado a [Environment].Group[Numero].txt
             String fileName = environment + ".Group" + groupNumber + ".txt";
-            currentGroupFile = new File(fileName);
+
+            // Usar la ruta en Documents/StartService
+            String userHome = System.getProperty("user.home");
+            currentGroupFile = new File(userHome + "/Documents/StartServices", fileName);
 
             // Verificar si ya existe un archivo con el mismo nombre
             if (currentGroupFile.exists()) {
@@ -102,7 +114,7 @@ public class GroupServerPanel extends JPanel {
                     loadFileContent(currentGroupFile.getPath()); // Cargar el archivo en el área de texto
 
                     // Agregar el número del grupo con la palabra "Grupo" al archivo del entorno
-                    File environmentFile = new File(environment + ".txt");
+                    File environmentFile = new File(userHome + "/Documents/StartServices/SetupServer", environment + ".txt");
                     try (FileWriter writer = new FileWriter(environmentFile, true)) {
                         writer.write("Grupo " + groupNumber + "\n"); // Añadir "Grupo" seguido del número
                     } catch (IOException e) {
@@ -120,13 +132,12 @@ public class GroupServerPanel extends JPanel {
         }
     }
 
-
-
-
+    void loadFileContent(String path) {
+    }
 
     private void editGroup() {
         // Verificar si hay grupos existentes
-        File directory = new File("."); // El directorio actual
+        File directory = new File(System.getProperty("user.home") + "/Documents/StartServices/SeutupServer"); // El directorio correcto
         String[] groupFiles = directory.list((dir, name) -> name.startsWith(currentEnvironment + ".Group") && name.endsWith(".txt"));
 
         if (groupFiles == null || groupFiles.length == 0) {
@@ -157,13 +168,13 @@ public class GroupServerPanel extends JPanel {
             String groupNumber = selectedGroup.replace("Grupo ", "");
 
             // Buscar el archivo correspondiente al grupo seleccionado
-            currentGroupFile = new File(currentEnvironment + ".Group" + groupNumber + ".txt");
+            currentGroupFile = new File(directory, currentEnvironment + ".Group" + groupNumber + ".txt");
 
             // Pedir al usuario el nuevo número del grupo
             String newGroupNumber = JOptionPane.showInputDialog(this, "Enter the new group number:");
             if (newGroupNumber != null && !newGroupNumber.trim().isEmpty()) {
                 String newFileName = currentEnvironment + ".Group" + newGroupNumber + ".txt";
-                File newGroupFile = new File(newFileName);
+                File newGroupFile = new File(directory, newFileName);
 
                 // Renombrar el archivo
                 if (currentGroupFile.renameTo(newGroupFile)) {
@@ -183,12 +194,21 @@ public class GroupServerPanel extends JPanel {
 
     private void deleteGroup() {
         // Verificar si hay grupos existentes
-        File directory = new File("."); // El directorio actual
+        File directory = new File(System.getProperty("user.home") + "/Documents/StartServices/SetupServer"); // Directorio correcto
         String[] groupFiles = directory.list((dir, name) -> name.startsWith(currentEnvironment + ".Group") && name.endsWith(".txt"));
 
         if (groupFiles == null || groupFiles.length == 0) {
             JOptionPane.showMessageDialog(this, "No group files found.");
             return;
+        }
+
+        // Convertir los nombres de los archivos en nombres de grupos (Grupo [Número])
+        String[] groupNames = new String[groupFiles.length];
+        for (int i = 0; i < groupFiles.length; i++) {
+            String fileName = groupFiles[i];
+            // Extraer solo el número del grupo de algo como "Environment.Group[Numero].txt"
+            String groupNumber = fileName.substring(fileName.indexOf("Group") + 5, fileName.indexOf(".txt"));
+            groupNames[i] = "Grupo " + groupNumber;
         }
 
         // Mostrar un cuadro de diálogo para seleccionar un grupo
@@ -197,52 +217,29 @@ public class GroupServerPanel extends JPanel {
                 "Delete Group",
                 JOptionPane.PLAIN_MESSAGE,
                 null,
-                groupFiles,
-                groupFiles[0]);
+                groupNames, // Mostrar solo los nombres de los grupos
+                groupNames[0]);
 
         if (selectedGroup != null) {
-            currentGroupFile = new File(selectedGroup);
-            int confirm = JOptionPane.showConfirmDialog(this, "Are you sure you want to delete " + selectedGroup + "?");
-            if (confirm == JOptionPane.YES_OPTION) {
-                if (currentGroupFile.delete()) {
-                    JOptionPane.showMessageDialog(this, "Group file deleted: " + selectedGroup);
-                    textArea.setText(""); // Limpiar el área de texto después de eliminar el archivo
-                    currentGroupFile = null; // Reiniciar el archivo actual
-                } else {
-                    JOptionPane.showMessageDialog(this, "Error deleting the group file.");
-                }
+            // Obtener el número del grupo seleccionado
+            String groupNumber = selectedGroup.replace("Grupo ", "");
+
+            // Buscar el archivo correspondiente al grupo seleccionado
+            currentGroupFile = new File(directory, currentEnvironment + ".Group" + groupNumber + ".txt");
+
+            // Eliminar el archivo
+            if (currentGroupFile.delete()) {
+                JOptionPane.showMessageDialog(this, "Group file deleted.");
+                textArea.setText(""); // Limpiar el área de texto después de eliminar
+            } else {
+                JOptionPane.showMessageDialog(this, "Error deleting the group file.");
             }
         } else {
             JOptionPane.showMessageDialog(this, "No group selected.");
         }
     }
 
-    // Método para obtener el entorno actual desde la etiqueta
-    private String getCurrentEnvironment() {
-        return environmentLabel.getText().replace("Current Environment: ", "").trim();
-    }
-
-    // Método para cargar el contenido del archivo en el área de texto
-    public void loadFileContent(String fileName) {
-        File file = new File(fileName);
-        if (file.exists()) {
-            try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-                textArea.setText(""); // Limpiar el área de texto
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    textArea.append(line + "\n"); // Añadir cada línea al área de texto
-                }
-            } catch (IOException e) {
-                JOptionPane.showMessageDialog(this, "Error loading file: " + e.getMessage());
-            }
-        } else {
-            textArea.setText("File does not exist."); // Mensaje si el archivo no existe
-        }
-    }
-
-    // Método para establecer el nombre del entorno seleccionado
-    public void setEnvironmentName(String environmentName) {
-        currentEnvironment = environmentName;
-        environmentLabel.setText("Current Environment: " + environmentName);
+    public String getCurrentEnvironment() {
+        return currentEnvironment;
     }
 }

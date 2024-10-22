@@ -77,7 +77,7 @@ public class ServerPanel extends JPanel {
     }
 
     private void loadEnvironmentsFromFile() {
-        File file = new File("Environments.txt");
+        File file = new File(System.getProperty("user.home") + "/Documents/StartServices/SetupServer/Environments.txt");
         if (file.exists()) {
             try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
                 String line;
@@ -114,7 +114,7 @@ public class ServerPanel extends JPanel {
     }
 
     private void saveEnvironmentToFile(String environmentName) {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter("Environments.txt", true))) { // 'true' para agregar al archivo
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(System.getProperty("user.home") + "/Documents/StartServices/SetupServer/Environments.txt", true))) { // 'true' para agregar al archivo
             writer.write(environmentName);
             writer.newLine(); // Nueva línea después de cada nombre de entorno
         } catch (IOException e) {
@@ -123,7 +123,7 @@ public class ServerPanel extends JPanel {
     }
 
     private void createEnvironmentFile(String environmentName) {
-        File environmentFile = new File(environmentName + ".txt");
+        File environmentFile = new File(System.getProperty("user.home") + "/Documents/StartServices/SetupServers/" + environmentName + ".txt");
 
         // Verifica si el archivo ya existe
         if (!environmentFile.exists()) {
@@ -141,7 +141,6 @@ public class ServerPanel extends JPanel {
             JOptionPane.showMessageDialog(this, "File for this environment already exists.");
         }
     }
-
 
     private void switchToGroupServerPanel() {
         // Cambia al panel de grupos y servidores utilizando el CardLayout

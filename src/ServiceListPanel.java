@@ -15,11 +15,17 @@ public class ServiceListPanel extends JPanel {
     private JComboBox<String> listDropdown;
     private List<String> createdLists;
 
+    // Base directory for storing files
+    private static final String BASE_DIR = System.getProperty("user.home") + "/Documents/StartServices/CreateServiceList/";
+
     public ServiceListPanel() {
         setLayout(new BorderLayout());
 
         // Initialize the list of created files
         createdLists = new ArrayList<>();
+
+        // Ensure the base directory exists
+        new File(BASE_DIR).mkdirs();
 
         // Panel for searching and creating lists
         JPanel topPanel = new JPanel();
@@ -132,7 +138,7 @@ public class ServiceListPanel extends JPanel {
 
     private void writeToFile(String serviceName, String selectedList) {
         // Construct the filename based on the selected list
-        String fileName = selectedList + ".txt"; // Use the existing file
+        String fileName = BASE_DIR + selectedList + ".txt"; // Use the existing file in the base directory
 
         try (FileWriter writer = new FileWriter(fileName, true)) { // Append mode
             writer.write(serviceName + "\n");
@@ -181,7 +187,7 @@ public class ServiceListPanel extends JPanel {
     }
 
     private void writeToListFile(String listName) {
-        File file = new File("List.txt");
+        File file = new File(BASE_DIR + "List.txt");
         try (FileWriter writer = new FileWriter(file, true)) { // Append mode
             writer.write(listName + "\n");
         } catch (IOException e) {
@@ -190,7 +196,7 @@ public class ServiceListPanel extends JPanel {
     }
 
     private void createNewListFile(String listName) {
-        File newListFile = new File(listName + ".txt");
+        File newListFile = new File(BASE_DIR + listName + ".txt");
         try (FileWriter writer = new FileWriter(newListFile)) {
             writer.write(""); // Create empty file for the new list
         } catch (IOException e) {
@@ -199,7 +205,7 @@ public class ServiceListPanel extends JPanel {
     }
 
     private void loadCreatedLists() {
-        File file = new File("List.txt");
+        File file = new File(BASE_DIR + "List.txt");
         if (file.exists()) {
             try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
                 String line;
@@ -215,7 +221,7 @@ public class ServiceListPanel extends JPanel {
 
     private void loadSelectedListServices(String listName) {
         selectedServicesArea.setText(""); // Clear the text area
-        File file = new File(listName + ".txt"); // Load the corresponding file
+        File file = new File(BASE_DIR + listName + ".txt"); // Load the corresponding file
         if (file.exists()) {
             try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
                 String line;

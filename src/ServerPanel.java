@@ -123,7 +123,12 @@ public class ServerPanel extends JPanel {
     }
 
     private void createEnvironmentFile(String environmentName) {
-        File environmentFile = new File(System.getProperty("user.home") + "/Documents/StartServices/SetupServers/" + environmentName + ".txt");
+        File environmentDir = new File(System.getProperty("user.home") + "/Documents/StartServices/SetupServer");
+        if (!environmentDir.exists()) {
+            environmentDir.mkdirs(); // Crea la carpeta si no existe
+        }
+
+        File environmentFile = new File(environmentDir, environmentName + ".txt");
 
         // Verifica si el archivo ya existe
         if (!environmentFile.exists()) {
@@ -141,6 +146,7 @@ public class ServerPanel extends JPanel {
             JOptionPane.showMessageDialog(this, "File for this environment already exists.");
         }
     }
+
 
     private void switchToGroupServerPanel() {
         // Cambia al panel de grupos y servidores utilizando el CardLayout

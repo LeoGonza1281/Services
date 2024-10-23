@@ -72,7 +72,7 @@ public class GroupServerPanel extends JPanel {
         currentEnvironment = "No environment selected"; // Valor inicial por defecto
     }
 
-    
+
 
 
     // Método para establecer el nombre del entorno
@@ -95,11 +95,19 @@ public class GroupServerPanel extends JPanel {
         String groupNumber = JOptionPane.showInputDialog(this, "Enter the group number:");
         if (groupNumber != null && !groupNumber.trim().isEmpty()) {
             // Formato cambiado a [Environment].Group[Numero].txt
-            String fileName = environment + ".Group" + groupNumber + ".txt";
+            String fileName = "Group" + groupNumber + ".txt";
 
-            // Usar la ruta en Documents/StartService
+            // Usar la ruta en Documents/StartService dentro de la carpeta del environment
             String userHome = System.getProperty("user.home");
-            currentGroupFile = new File(userHome + "/Documents/StartServices", fileName);
+            File environmentFolder = new File(userHome + "/Documents/StartServices/SetupServer/" + environment);
+
+            // Crear la carpeta si no existe
+            if (!environmentFolder.exists()) {
+                environmentFolder.mkdirs(); // Crear todas las carpetas necesarias
+            }
+
+            // Crear el archivo del grupo dentro de la carpeta del environment
+            currentGroupFile = new File(environmentFolder, fileName);
 
             // Verificar si ya existe un archivo con el mismo nombre
             if (currentGroupFile.exists()) {
@@ -113,7 +121,7 @@ public class GroupServerPanel extends JPanel {
                     JOptionPane.showMessageDialog(this, "Group file created: " + fileName);
                     loadFileContent(currentGroupFile.getPath()); // Cargar el archivo en el área de texto
 
-                    // Agregar el número del grupo con la palabra "Grupo" al archivo del entorno
+                    // Agregar el número del grupo con la palabra "Grupo" al archivo del entorno general (NO en la carpeta del environment)
                     File environmentFile = new File(userHome + "/Documents/StartServices/SetupServer", environment + ".txt");
                     try (FileWriter writer = new FileWriter(environmentFile, true)) {
                         writer.write("Grupo " + groupNumber + "\n"); // Añadir "Grupo" seguido del número
@@ -131,6 +139,7 @@ public class GroupServerPanel extends JPanel {
             JOptionPane.showMessageDialog(this, "Invalid group number.");
         }
     }
+
 
     void loadFileContent(String path) {
     }

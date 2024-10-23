@@ -123,24 +123,35 @@ public class ServerPanel extends JPanel {
     }
 
     private void createEnvironmentFile(String environmentName) {
-        File environmentFile = new File(System.getProperty("user.home") + "/Documents/StartServices/SetupServers/" + environmentName + ".txt");
+        // Define la ruta de la carpeta que llevará el nombre del entorno
+        File environmentFolder = new File(System.getProperty("user.home") + "/Documents/StartServices/SetupServer/" + environmentName);
 
-        // Verifica si el archivo ya existe
-        if (!environmentFile.exists()) {
-            try {
-                // Simplemente crea un archivo vacío sin escribir contenido automático
-                if (environmentFile.createNewFile()) {
-                    System.out.println("File for " + environmentName + " created successfully.");
+        try {
+            // Verificar si la carpeta ya existe, si no, crearla
+            if (!environmentFolder.exists()) {
+                if (environmentFolder.mkdirs()) { // Crea los directorios necesarios
+                    System.out.println("Directory " + environmentFolder.getPath() + " created successfully.");
                 } else {
-                    JOptionPane.showMessageDialog(this, "Could not create file for this environment.");
+                    JOptionPane.showMessageDialog(this, "Could not create directory for the environment.");
+                    return; // Salir si no se puede crear el directorio
                 }
-            } catch (IOException e) {
-                JOptionPane.showMessageDialog(this, "Error creating environment file: " + e.getMessage());
             }
-        } else {
-            JOptionPane.showMessageDialog(this, "File for this environment already exists.");
+
+            // Crear el archivo .txt dentro de la carpeta correspondiente
+            File environmentFile = new File(environmentFolder, environmentName + ".txt");
+
+            // Intentar crear el archivo para el entorno
+            if (environmentFile.createNewFile()) {
+                System.out.println("File for " + environmentName + " created successfully in its folder.");
+            } else {
+                JOptionPane.showMessageDialog(this, "File for this environment already exists.");
+            }
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(this, "Error creating environment file: " + e.getMessage());
         }
     }
+
+
 
     private void switchToGroupServerPanel() {
         // Cambia al panel de grupos y servidores utilizando el CardLayout

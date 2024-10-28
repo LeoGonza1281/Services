@@ -8,13 +8,23 @@ public class ServiceFetcher {
 
     public static List<String> fetchServices() {
         List<String> services = new ArrayList<>();
-
-        // Aquí deberías reemplazar este comando con el que te permita obtener tus servicios.
-        String command = "\"Get-Service | Select-Object Name | Format-Table -AutoSize\";"; // Para PowerShell
+        String osName = System.getProperty("os.name").toLowerCase();
+        String command;
 
         try {
-            // Ejecutar el comando en PowerShell
-            ProcessBuilder processBuilder = new ProcessBuilder("powershell.exe", "-Command", command);
+            ProcessBuilder processBuilder;
+
+            // Verificar el sistema operativo
+            if (osName.contains("win")) {
+                // Comando para Windows (PowerShell)
+                command = "Get-Service | Select-Object Name | Format-Table -AutoSize";
+                processBuilder = new ProcessBuilder("powershell.exe", "-Command", command);
+            } else {
+                // Comando para macOS o Linux (bash/sh)
+                command = "service --status-all";  // Puedes ajustar este comando para listar servicios en Unix
+                processBuilder = new ProcessBuilder("sh", "-c", command);
+            }
+
             processBuilder.redirectErrorStream(true);
             Process process = processBuilder.start();
 

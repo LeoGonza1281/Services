@@ -31,7 +31,7 @@ public class Main extends JFrame {
 
         // Crear los paneles individuales
         ButtonPanel buttonPanel = new ButtonPanel(); // Panel principal con los botones
-        serverPanel = new ServerPanel(cardLayout, mainPanel); // Pasar cardLayout y mainPanel al ServerPanel
+        serverPanel = new ServerPanel(cardLayout, mainPanel, appDirectory); // Pasar cardLayout y mainPanel al ServerPanel
         startRunningPanel = new StartRunningPanel(); // Panel para iniciar servicios en los servidores
         ServiceListPanel serviceListPanel = new ServiceListPanel(); // Panel para crear la lista de servicios
 
@@ -75,23 +75,40 @@ public class Main extends JFrame {
         });
     }
 
-    // Método para crear la carpeta "StartServices" en la carpeta de Documentos del usuario
+    // Método para crear la carpeta de la aplicación dependiendo del sistema operativo
     private void createAppDirectory() {
-        // Obtener el directorio de documentos del usuario
+        // Obtener el directorio principal del usuario
         String userHome = System.getProperty("user.home");
-        File documentsDir = new File(userHome, "Documents");
 
-        // Crear la carpeta StartServices en Documentos
-        appDirectory = new File(documentsDir, "StartServices");
-        if (!appDirectory.exists()) {
-            if (appDirectory.mkdir()) {
-                System.out.println("Directorio 'StartServices' creado en Documentos.");
-            } else {
-                System.err.println("No se pudo crear el directorio 'StartServices'.");
-            }
+        // Crear el directorio dependiendo del sistema operativo
+        String osName = System.getProperty("os.name").toLowerCase();
+        File appDirectory;
+
+        if (osName.contains("win")) {
+            // Para Windows, creamos la carpeta en "Documents"
+            appDirectory = new File(userHome, "Documents/StartServices");
+        } else if (osName.contains("mac")) {
+            // Para macOS, creamos en la carpeta de documentos del usuario
+            appDirectory = new File(userHome, "Documents/StartServices");
+        } else if (osName.contains("nix") || osName.contains("nux")) {
+            // Para Linux, puedes usar una carpeta de configuración oculta en el home
+            appDirectory = new File(userHome, ".startservices"); // Carpeta oculta
+        } else {
+            // Por defecto, crear la carpeta en el home del usuario
+            appDirectory = new File(userHome, "StartServices");
         }
-        // Imprimir un mensaje indicando que el directorio ya existe o se ha creado
-        System.out.println("El directorio 'StartServices' está disponible en: " + appDirectory.getAbsolutePath());
+
+        if (!appDirectory.exists()) {
+            if (appDirectory.mkdirs()) {
+                System.out.println("Directorio '" + appDirectory.getAbsolutePath() + "' creado.");
+            } else {
+                System.err.println("No se pudo crear el directorio '" + appDirectory.getAbsolutePath() + "'.");
+            }
+        } else {
+            System.out.println("El directorio ya existe: " + appDirectory.getAbsolutePath());
+        }
+
+        this.appDirectory = appDirectory; // Asignar a la variable de la clase
     }
 
     // Método para crear el archivo de texto de entornos solo si no existe

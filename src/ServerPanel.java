@@ -15,11 +15,15 @@ public class ServerPanel extends JPanel {
     private CardLayout cardLayout; // Para manejar el cambio de panel
     private JPanel mainPanel; // Panel principal
     private GroupServerPanel groupServerPanel; // Panel de grupos y servidores
+    private File setupServerDirectory; // Directorio de SetupServer que se creará dinámicamente
 
-    public ServerPanel(CardLayout cardLayout, JPanel mainPanel) {
+    // Constructor actualizado que recibe el directorio de la aplicación
+    public ServerPanel(CardLayout cardLayout, JPanel mainPanel, File appDirectory) {
         this.cardLayout = cardLayout; // Inicializa el CardLayout
         this.mainPanel = mainPanel; // Inicializa el panel principal
         environments = new ArrayList<>();
+        this.setupServerDirectory = getSetupServerDirectory(appDirectory); // Configura el directorio base dinámico
+
         loadEnvironmentsFromFile(); // Cargar entornos al iniciar el panel
         groupServerPanel = new GroupServerPanel(); // Inicializa el GroupServerPanel
 
@@ -76,8 +80,24 @@ public class ServerPanel extends JPanel {
         add(switchPanelButton, BorderLayout.SOUTH); // Botón para cambiar de panel abajo
     }
 
+    // Método para obtener el directorio base según el sistema operativo
+    private File getSetupServerDirectory(File appDirectory) {
+        // Directamente retorna el directorio SetupServer
+        File setupServerDir = new File(appDirectory, "SetupServer"); // Directorio SetupServer
+
+        // Si no existe la carpeta, intenta crearla
+        if (!setupServerDir.exists()) {
+            if (setupServerDir.mkdirs()) {
+                System.out.println("Directory " + setupServerDir.getPath() + " created successfully.");
+            } else {
+                JOptionPane.showMessageDialog(this, "Could not create SetupServer directory.");
+            }
+        }
+        return setupServerDir;
+    }
+
     private void loadEnvironmentsFromFile() {
-        File file = new File(System.getProperty("user.home") + "/Documents/StartServices/SetupServer/Environments.txt");
+        File file = new File(setupServerDirectory, "Environments.txt"); // Usamos setupServerDirectory como base
         if (file.exists()) {
             try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
                 String line;
@@ -114,7 +134,7 @@ public class ServerPanel extends JPanel {
     }
 
     private void saveEnvironmentToFile(String environmentName) {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(System.getProperty("user.home") + "/Documents/StartServices/SetupServer/Environments.txt", true))) { // 'true' para agregar al archivo
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(new File(setupServerDirectory, "Environments.txt"), true))) { // 'true' para agregar al archivo
             writer.write(environmentName);
             writer.newLine(); // Nueva línea después de cada nombre de entorno
         } catch (IOException e) {
@@ -123,8 +143,8 @@ public class ServerPanel extends JPanel {
     }
 
     private void createEnvironmentFile(String environmentName) {
-        // Define la ruta de la carpeta que llevará el nombre del entorno
-        File environmentFolder = new File(System.getProperty("user.home") + "/Documents/StartServices/SetupServer/" + environmentName);
+        // Define la ruta de la carpeta que llevará el nombre del entorno dentro de setupServerDirectory
+        File environmentFolder = new File(setupServerDirectory, environmentName);
 
         try {
             // Verificar si la carpeta ya existe, si no, crearla
@@ -150,8 +170,6 @@ public class ServerPanel extends JPanel {
             JOptionPane.showMessageDialog(this, "Error creating environment file: " + e.getMessage());
         }
     }
-
-
 
     private void switchToGroupServerPanel() {
         // Cambia al panel de grupos y servidores utilizando el CardLayout

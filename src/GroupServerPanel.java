@@ -1,17 +1,21 @@
 import javax.swing.*;
 import java.awt.*;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class GroupServerPanel extends JPanel {
     private JTextArea textArea; // Área para mostrar el contenido del archivo
     private JLabel environmentLabel; // Etiqueta para mostrar el nombre del entorno actual
     private File currentGroupFile; // Archivo actual del grupo
     private String currentEnvironment; // Nombre del entorno actual
+    private List<String> groupNames; // Lista de nombres de grupos creados
 
     public GroupServerPanel() {
         setLayout(new BorderLayout()); // Layout principal
+
+        // Inicializar la lista de grupos
+        groupNames = new ArrayList<>();
 
         // Panel para Grupos y Servidores
         JPanel leftPanel = new JPanel();
@@ -89,10 +93,10 @@ public class GroupServerPanel extends JPanel {
         // Pedir al usuario el número del grupo
         String groupNumber = JOptionPane.showInputDialog(this, "Enter the group number:");
         if (groupNumber != null && !groupNumber.trim().isEmpty()) {
-            // Formato cambiado a [Environment].Group[Numero].txt
+            // Formato del nombre del archivo de grupo
             String fileName = "Group" + groupNumber + ".txt";
 
-            // Usar la ruta en Documents/StartService dentro de la carpeta del environment
+            // Ubicación de la carpeta del entorno en Documents/StartServices/SetupServer
             String userHome = System.getProperty("user.home");
             File environmentFolder = new File(userHome + "/Documents/StartServices/SetupServer/" + environment);
 
@@ -110,20 +114,40 @@ public class GroupServerPanel extends JPanel {
                 return; // Salir si ya existe el archivo
             }
 
-            // Intentar crear el nuevo archivo
+            // Intentar crear el nuevo archivo de grupo
             try {
                 if (currentGroupFile.createNewFile()) {
                     JOptionPane.showMessageDialog(this, "Group file created: " + fileName);
                     loadFileContent(currentGroupFile.getPath()); // Cargar el archivo en el área de texto
 
-                    // Agregar el número del grupo con la palabra "Grupo" al archivo del entorno general (NO en la carpeta del environment)
+                    // Ubicación del archivo general del entorno
                     File environmentFile = new File(userHome + "/Documents/StartServices/SetupServer", environment + ".txt");
-                    try (FileWriter writer = new FileWriter(environmentFile, true)) {
-                        writer.write("Grupo " + groupNumber + "\n"); // Añadir "Grupo" seguido del número
-                    } catch (IOException e) {
-                        JOptionPane.showMessageDialog(this, "Error writing to environment file: " + e.getMessage());
-                    }
 
+                    // Verificar que el archivo general del entorno existe
+                    if (environmentFile.exists()) {
+                        // Añadir el grupo al archivo general del entorno
+                        try (FileWriter writer = new FileWriter(environmentFile, true)) {
+                            writer.write("Grupo " + groupNumber + "\n"); // Añadir "Grupo" seguido del número
+                            groupNames.add("Group" + groupNumber); // Agregar a la lista de grupos
+                        } catch (IOException e) {
+                            JOptionPane.showMessageDialog(this, "Error writing to environment file: " + e.getMessage());
+                        }
+                    } else {
+                        // Crear el archivo si no existe y agregar el grupo
+                        try {
+                            if (environmentFile.createNewFile()) {
+                                // Si el archivo se creó correctamente, se agrega el grupo
+                                try (FileWriter writer = new FileWriter(environmentFile, true)) {
+                                    writer.write("Grupo " + groupNumber + "\n"); // Añadir "Grupo" seguido del número
+                                    groupNames.add("Group" + groupNumber); // Agregar a la lista de grupos
+                                } catch (IOException e) {
+                                    JOptionPane.showMessageDialog(this, "Error writing to environment file: " + e.getMessage());
+                                }
+                            }
+                        } catch (IOException e) {
+                            JOptionPane.showMessageDialog(this, "Error creating environment file: " + e.getMessage());
+                        }
+                    }
                 } else {
                     JOptionPane.showMessageDialog(this, "Error creating group file.");
                 }
@@ -135,18 +159,85 @@ public class GroupServerPanel extends JPanel {
         }
     }
 
+
     void loadFileContent(String path) {
-        // Aquí iría el código para cargar el contenido del archivo en el área de texto
-        // Si no necesitas modificar esto, puedes dejarlo vacío
     }
 
+
     private void editGroup() {
-        // Código para editar un grupo (puedes dejarlo igual que antes)
+        // Verificar si hay grupos disponibles para editar
+        if (groupNames.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "No groups available to edit.");
+            return;
+        }
+
+        // Mostrar un cuadro de diálogo para seleccionar un grupo a editar
+        String selectedGroup = (String) JOptionPane.showInputDialog(this, "Select a group to edit:", "Edit Group",
+                JOptionPane.PLAIN_MESSAGE, null, groupNames.toArray(), groupNames.get(0));
+
+        // Si el usuario selecciona un grupo
+        if (selectedGroup != null) {
+            // Pedir el nuevo nombre del grupo
+            String newGroupName = JOptionPane.showInputDialog(this, "Enter new name for " + selectedGroup + ":");
+            if (newGroupName != null && !newGroupName.trim().isEmpty()) {
+                // Actualizar el nombre del archivo
+                File oldFile = new File(currentGroupFile.getParent(), selectedGroup + ".txt");
+                File newFile = new File(currentGroupFile.getParent(), newGroupName + ".txt");
+
+                // Renombrar el archivo
+                if (oldFile.renameTo(newFile)) {
+                    JOptionPane.showMessageDialog(this, "Group renamed to: " + newGroupName);
+                    loadFileContent(newFile.getPath()); // Cargar el nuevo archivo en el área de texto
+
+                    // Actualizar la lista de nombres de grupos
+                    groupNames.remove(selectedGroup);
+                    groupNames.add(newGroupName);
+                } else {
+                    JOptionPane.showMessageDialog(this, "Error renaming group file.");
+                }
+            } else {
+                JOptionPane.showMessageDialog(this, "Invalid group name.");
+            }
+        }
     }
 
     private void deleteGroup() {
-        // Código para eliminar un grupo (puedes dejarlo igual que antes)
+        // Verificar si hay grupos disponibles para eliminar
+        if (groupNames.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "No groups available to delete.");
+            return;
+        }
+
+        // Mostrar un cuadro de diálogo para seleccionar un grupo a eliminar
+        String selectedGroup = (String) JOptionPane.showInputDialog(this, "Select a group to delete:", "Delete Group",
+                JOptionPane.PLAIN_MESSAGE, null, groupNames.toArray(), groupNames.get(0));
+
+        // Si el usuario selecciona un grupo
+        if (selectedGroup != null) {
+            // Confirmar la eliminación
+            int confirm = JOptionPane.showConfirmDialog(this, "Are you sure you want to delete the group " + selectedGroup + "?",
+                    "Confirm Deletion", JOptionPane.YES_NO_OPTION);
+
+            // Si el usuario confirma la eliminación
+            if (confirm == JOptionPane.YES_OPTION) {
+                // Obtener el archivo del grupo
+                File groupFile = new File(currentGroupFile.getParent(), selectedGroup + ".txt");
+
+                // Intentar eliminar el archivo
+                if (groupFile.delete()) {
+                    JOptionPane.showMessageDialog(this, "Group " + selectedGroup + " deleted successfully.");
+                    loadFileContent(""); // Limpiar el área de texto
+
+                    // Actualizar la lista de grupos
+                    groupNames.remove(selectedGroup);
+                } else {
+                    JOptionPane.showMessageDialog(this, "Error deleting group file.");
+                }
+            }
+        }
     }
+
+
 
     public String getCurrentEnvironment() {
         return currentEnvironment;

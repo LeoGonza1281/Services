@@ -82,17 +82,17 @@ public class ServerPanel extends JPanel {
 
     // Método para obtener el directorio base según el sistema operativo
     private File getSetupServerDirectory(File appDirectory) {
-        // Directamente retorna el directorio SetupServer
         File setupServerDir = new File(appDirectory, "SetupServer"); // Directorio SetupServer
 
-        // Si no existe la carpeta, intenta crearla
+        // Crear el directorio si no existe
         if (!setupServerDir.exists()) {
             if (setupServerDir.mkdirs()) {
-                System.out.println("Directory " + setupServerDir.getPath() + " created successfully.");
+                System.out.println("SetupServer directory created successfully.");
             } else {
-                JOptionPane.showMessageDialog(this, "Could not create SetupServer directory.");
+                System.out.println("Failed to create SetupServer directory.");
             }
         }
+
         return setupServerDir;
     }
 
@@ -114,17 +114,15 @@ public class ServerPanel extends JPanel {
         String environmentName = environmentTextField.getText().trim();
 
         if (!environmentName.isEmpty()) {
-            // Verificar si el entorno ya existe
+            // Check if the environment already exists
             if (!environments.contains(environmentName)) {
+                // Add the new environment to the list
                 environments.add(environmentName);
-                environmentComboBox.addItem(environmentName);
-                environmentTextField.setText(""); // Limpiar el cuadro de texto
+                environmentComboBox.addItem(environmentName); // Add to the JComboBox
+                environmentTextField.setText(""); // Clear the text field
 
-                // Guardar el entorno en el archivo Environments.txt
-                saveEnvironmentToFile(environmentName); // Aquí se guarda el entorno en Environments.txt
-
-                // Crear un archivo de texto para el nuevo entorno
-                createEnvironmentFile(environmentName); // Aquí se crea el archivo .txt del entorno
+                // Save the environment to the file
+                saveEnvironmentToFile(environmentName);
             } else {
                 JOptionPane.showMessageDialog(this, "Environment already exists.");
             }
@@ -134,42 +132,22 @@ public class ServerPanel extends JPanel {
     }
 
     private void saveEnvironmentToFile(String environmentName) {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(new File(setupServerDirectory, "Environments.txt"), true))) { // 'true' para agregar al archivo
+        File file = new File(setupServerDirectory, "Environments.txt"); // File path
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(file, true))) { // Append mode
             writer.write(environmentName);
-            writer.newLine(); // Nueva línea después de cada nombre de entorno
+            writer.newLine(); // New line after each environment name
         } catch (IOException e) {
             JOptionPane.showMessageDialog(this, "Error saving environment to file: " + e.getMessage());
         }
     }
 
-    private void createEnvironmentFile(String environmentName) {
-        // Define la ruta de la carpeta que llevará el nombre del entorno dentro de setupServerDirectory
-        File environmentFolder = new File(setupServerDirectory, environmentName);
 
-        try {
-            // Verificar si la carpeta ya existe, si no, crearla
-            if (!environmentFolder.exists()) {
-                if (environmentFolder.mkdirs()) { // Crea los directorios necesarios
-                    System.out.println("Directory " + environmentFolder.getPath() + " created successfully.");
-                } else {
-                    JOptionPane.showMessageDialog(this, "Could not create directory for the environment.");
-                    return; // Salir si no se puede crear el directorio
-                }
-            }
-
-            // Crear el archivo .txt dentro de la carpeta correspondiente
-            File environmentFile = new File(environmentFolder, environmentName + ".txt");
-
-            // Intentar crear el archivo para el entorno
-            if (environmentFile.createNewFile()) {
-                System.out.println("File for " + environmentName + " created successfully in its folder.");
-            } else {
-                JOptionPane.showMessageDialog(this, "File for this environment already exists.");
-            }
-        } catch (IOException e) {
-            JOptionPane.showMessageDialog(this, "Error creating environment file: " + e.getMessage());
-        }
-    }
+    // Eliminar el método createEnvironmentFile ya que no se utilizará
+    // private void createEnvironmentFile(String environmentName) {
+    //     // Define la ruta de la carpeta que llevará el nombre del entorno dentro de setupServerDirectory
+    //     File environmentFolder = new File(setupServerDirectory, environmentName);
+    //     ...
+    // }
 
     private void switchToGroupServerPanel() {
         // Cambia al panel de grupos y servidores utilizando el CardLayout

@@ -19,10 +19,16 @@ public class ServiceFetcher {
                 // Comando para Windows (PowerShell)
                 command = "Get-Service | Select-Object Name | Format-Table -AutoSize";
                 processBuilder = new ProcessBuilder("powershell.exe", "-Command", command);
-            } else {
-                // Comando para macOS o Linux (bash/sh)
-                command = "service --status-all";  // Puedes ajustar este comando para listar servicios en Unix
+            } else if (osName.contains("mac")) {
+                // Comando para macOS
+                command = "launchctl list";
                 processBuilder = new ProcessBuilder("sh", "-c", command);
+                System.out.println(osName);
+            } else {
+                // Comando para Linux
+                command = "systemctl list-units --type=service";
+                processBuilder = new ProcessBuilder("sh", "-c", command);
+                System.out.println(osName);
             }
 
             processBuilder.redirectErrorStream(true);

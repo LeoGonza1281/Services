@@ -37,7 +37,7 @@ public class GroupServerPanel extends JPanel {
         serverPanel.setBorder(BorderFactory.createTitledBorder("Servidores"));
         serverPanel.setLayout(new GridLayout(4, 1)); // 4 filas: 1 título y 3 botones
 
-        JButton addServerButton = new JButton("Add");
+        JButton addServerButton = new JButton("AddServer"); // Cambiado a "AddServer"
         JButton editServerButton = new JButton("Edit");
         JButton deleteServerButton = new JButton("Delete");
 
@@ -71,9 +71,6 @@ public class GroupServerPanel extends JPanel {
         // Inicializar el entorno actual
         currentEnvironment = "No environment selected"; // Valor inicial por defecto
     }
-
-    
-
 
     // Método para establecer el nombre del entorno
     void setEnvironmentName(String environmentName) {
@@ -140,13 +137,13 @@ public class GroupServerPanel extends JPanel {
         }
     }
 
-
     void loadFileContent(String path) {
+        // Implementar la lógica para cargar el contenido del archivo en el área de texto
     }
 
     private void editGroup() {
         // Verificar si hay grupos existentes
-        File directory = new File(System.getProperty("user.home") + "/Documents/StartServices/SeutupServer"); // El directorio correcto
+        File directory = new File(System.getProperty("user.home") + "/Documents/StartServices/SetupServer"); // El directorio correcto
         String[] groupFiles = directory.list((dir, name) -> name.startsWith(currentEnvironment + ".Group") && name.endsWith(".txt"));
 
         if (groupFiles == null || groupFiles.length == 0) {
@@ -236,19 +233,76 @@ public class GroupServerPanel extends JPanel {
             // Buscar el archivo correspondiente al grupo seleccionado
             currentGroupFile = new File(directory, currentEnvironment + ".Group" + groupNumber + ".txt");
 
-            // Eliminar el archivo
-            if (currentGroupFile.delete()) {
-                JOptionPane.showMessageDialog(this, "Group file deleted.");
-                textArea.setText(""); // Limpiar el área de texto después de eliminar
-            } else {
-                JOptionPane.showMessageDialog(this, "Error deleting the group file.");
+            // Preguntar al usuario si realmente desea eliminar el grupo
+            int confirm = JOptionPane.showConfirmDialog(this, "Are you sure you want to delete " + selectedGroup + "?",
+                    "Confirm Deletion", JOptionPane.YES_NO_OPTION);
+            if (confirm == JOptionPane.YES_OPTION) {
+                if (currentGroupFile.delete()) {
+                    JOptionPane.showMessageDialog(this, "Group file deleted: " + currentGroupFile.getName());
+                    loadFileContent(""); // Limpiar el área de texto
+                } else {
+                    JOptionPane.showMessageDialog(this, "Error deleting the group file.");
+                }
             }
         } else {
             JOptionPane.showMessageDialog(this, "No group selected.");
         }
     }
 
-    public String getCurrentEnvironment() {
+    private void addServer() {
+        // Obtener el entorno actual
+        String environment = getCurrentEnvironment();
+
+        // Verificar que el entorno no sea "No environment selected"
+        if (environment.equals("No environment selected")) {
+            JOptionPane.showMessageDialog(this, "Please select an environment first.");
+            return;
+        }
+
+        // Pedir al usuario el número del servidor
+        String serverNumber = JOptionPane.showInputDialog(this, "Enter the server number:");
+        if (serverNumber != null && !serverNumber.trim().isEmpty()) {
+            // Formato de archivo: [Environment].Server[Numero].txt
+            String fileName = environment + ".Server" + serverNumber + ".txt";
+
+            // Usar la ruta en Documents/StartServices/SetupServer
+            String userHome = System.getProperty("user.home");
+            File setupServerDirectory = new File(userHome + "/Documents/StartServices/SetupServer");
+
+            // Crear la carpeta SetupServer si no existe
+            if (!setupServerDirectory.exists()) {
+                setupServerDirectory.mkdirs();
+            }
+
+            // Crear el archivo dentro de la carpeta SetupServer
+            File currentServerFile = new File(setupServerDirectory, fileName);
+
+            // Verificar si ya existe un archivo con el mismo nombre
+            if (currentServerFile.exists()) {
+                JOptionPane.showMessageDialog(this, "A server with this number already exists: " + fileName);
+                return; // Salir si ya existe el archivo
+            }
+
+            // Intentar crear el nuevo archivo
+            try {
+                if (currentServerFile.createNewFile()) {
+                    JOptionPane.showMessageDialog(this, "Server file created: " + fileName);
+                    loadFileContent(currentServerFile.getPath()); // Cargar el archivo en el área de texto
+                } else {
+                    JOptionPane.showMessageDialog(this, "Error creating server file.");
+                }
+            } catch (IOException ex) {
+                JOptionPane.showMessageDialog(this, "Error creating server file: " + ex.getMessage());
+            }
+        } else {
+            JOptionPane.showMessageDialog(this, "Invalid server number.");
+        }
+    }
+
+    private String getCurrentEnvironment() {
+        // Método para obtener el entorno actual
         return currentEnvironment;
     }
+
+    // Agregar otros métodos para editar y eliminar servidores
 }

@@ -97,9 +97,17 @@ public class GroupServerPanel extends JPanel {
             // Formato cambiado a [Environment].Group[Numero].txt
             String fileName = environment + ".Group" + groupNumber + ".txt";
 
-            // Usar la ruta en Documents/StartService
+            // Usar la ruta en Documents/StartServices/SetupServer
             String userHome = System.getProperty("user.home");
-            currentGroupFile = new File(userHome + "/Documents/StartServices", fileName);
+            File setupServerDirectory = new File(userHome + "/Documents/StartServices/SetupServer");
+
+            // Crear la carpeta SetupServer si no existe
+            if (!setupServerDirectory.exists()) {
+                setupServerDirectory.mkdirs();
+            }
+
+            // Crear el archivo dentro de la carpeta SetupServer
+            currentGroupFile = new File(setupServerDirectory, fileName);
 
             // Verificar si ya existe un archivo con el mismo nombre
             if (currentGroupFile.exists()) {
@@ -114,7 +122,7 @@ public class GroupServerPanel extends JPanel {
                     loadFileContent(currentGroupFile.getPath()); // Cargar el archivo en el área de texto
 
                     // Agregar el número del grupo con la palabra "Grupo" al archivo del entorno
-                    File environmentFile = new File(userHome + "/Documents/StartServices/SetupServer", environment + ".txt");
+                    File environmentFile = new File(setupServerDirectory, environment + ".txt");
                     try (FileWriter writer = new FileWriter(environmentFile, true)) {
                         writer.write("Grupo " + groupNumber + "\n"); // Añadir "Grupo" seguido del número
                     } catch (IOException e) {
@@ -131,6 +139,7 @@ public class GroupServerPanel extends JPanel {
             JOptionPane.showMessageDialog(this, "Invalid group number.");
         }
     }
+
 
     void loadFileContent(String path) {
     }

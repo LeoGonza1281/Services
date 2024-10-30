@@ -7,8 +7,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ServerPanel extends JPanel {
-    private static final String ENVIRONMENT_FILE_PATH = System.getProperty("user.home") + "/Documents/StartServices/SetupServer/Environments.txt";
-    private static final String ENVIRONMENT_DIR_PATH = System.getProperty("user.home") + "/Documents/StartServices/SetupServer";
+    private static final String ENVIRONMENT_FILE_PATH = getEnvironmentFilePath();
+    private static final String ENVIRONMENT_DIR_PATH = getEnvironmentDirPath();
 
     private JTextField environmentTextField;
     private JButton createEnvironmentButton;
@@ -78,6 +78,26 @@ public class ServerPanel extends JPanel {
         setLayout(new BorderLayout());
         add(inputPanel, BorderLayout.CENTER); // Input panel in the center
         add(switchPanelButton, BorderLayout.SOUTH); // Button to switch panels at the bottom
+    }
+
+    private static String getEnvironmentFilePath() {
+        String os = System.getProperty("os.name").toLowerCase();
+        if (os.contains("win")) {
+            return System.getProperty("user.home") + "\\Documents\\StartServices\\SetupServer\\Environments.txt";
+        } else {
+            // Para Linux y macOS
+            return System.getProperty("user.home") + "/Documents/StartServices/SetupServer/Environments.txt";
+        }
+    }
+
+    private static String getEnvironmentDirPath() {
+        String os = System.getProperty("os.name").toLowerCase();
+        if (os.contains("win")) {
+            return System.getProperty("user.home") + "\\Documents\\StartServices\\SetupServer";
+        } else {
+            // Para Linux y macOS
+            return System.getProperty("user.home") + "/Documents/StartServices/SetupServer";
+        }
     }
 
     private void loadEnvironmentsFromFile() {

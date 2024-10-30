@@ -181,7 +181,19 @@ public class GroupServerPanel extends JPanel {
 
     private File getSetupServerDirectory() {
         String userHome = System.getProperty("user.home");
-        File setupServerDirectory = new File(userHome + "/Documents/StartServices/SetupServer");
+        String os = System.getProperty("os.name").toLowerCase();
+        String setupServerPath;
+
+        // Determine the correct path based on the operating system
+        if (os.contains("win")) {
+            setupServerPath = userHome + "\\Documents\\StartServices\\SetupServer"; // Windows
+        } else if (os.contains("mac")) {
+            setupServerPath = userHome + "/Documents/StartServices/SetupServer"; // macOS
+        } else {
+            setupServerPath = userHome + "/Documents/StartServices/SetupServer"; // Linux and others
+        }
+
+        File setupServerDirectory = new File(setupServerPath);
         if (!setupServerDirectory.exists()) {
             setupServerDirectory.mkdirs();
         }

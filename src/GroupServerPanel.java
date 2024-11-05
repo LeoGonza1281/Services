@@ -155,12 +155,68 @@ public class GroupServerPanel extends JPanel {
     }
 
     private void editGroup() {
-        // Implementación futura
+        String[] groupFiles = getGroupFiles();
+        if (groupFiles == null || groupFiles.length == 0) {
+            JOptionPane.showMessageDialog(this, "No groups found to edit. Please create a group first.");
+            return;
+        }
+
+        String selectedGroup = (String) JOptionPane.showInputDialog(this, "Select a group to rename:",
+                "Edit Group", JOptionPane.PLAIN_MESSAGE, null, groupFiles, groupFiles[0]);
+
+        if (selectedGroup != null) {
+            String newGroupNumber = JOptionPane.showInputDialog(this, "Enter the new group number:");
+            if (newGroupNumber == null || newGroupNumber.trim().isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Invalid group number.");
+                return;
+            }
+
+            File oldGroupFile = new File(getSetupServerDirectory(), selectedGroup);
+            String newGroupFileName = currentEnvironment + ".Group" + newGroupNumber + ".txt";
+            File newGroupFile = new File(getSetupServerDirectory(), newGroupFileName);
+
+            if (newGroupFile.exists()) {
+                JOptionPane.showMessageDialog(this, "A group with this number already exists: " + newGroupFileName);
+                return;
+            }
+
+            if (oldGroupFile.renameTo(newGroupFile)) {
+                JOptionPane.showMessageDialog(this, "Group renamed to " + newGroupFileName);
+                currentGroup = "Group " + newGroupNumber;
+                updateEnvironmentLabel();
+            } else {
+                JOptionPane.showMessageDialog(this, "Error renaming group file.");
+            }
+        }
     }
 
     private void deleteGroup() {
-        // Implementación futura
+        String[] groupFiles = getGroupFiles();
+        if (groupFiles == null || groupFiles.length == 0) {
+            JOptionPane.showMessageDialog(this, "No groups found to delete. Please create a group first.");
+            return;
+        }
+
+        String selectedGroup = (String) JOptionPane.showInputDialog(this, "Select a group to delete:",
+                "Delete Group", JOptionPane.PLAIN_MESSAGE, null, groupFiles, groupFiles[0]);
+
+        if (selectedGroup != null) {
+            int confirm = JOptionPane.showConfirmDialog(this, "Are you sure you want to delete " + selectedGroup + "?",
+                    "Delete Confirmation", JOptionPane.YES_NO_OPTION);
+
+            if (confirm == JOptionPane.YES_OPTION) {
+                File groupFile = new File(getSetupServerDirectory(), selectedGroup);
+                if (groupFile.delete()) {
+                    JOptionPane.showMessageDialog(this, "Group deleted successfully.");
+                    currentGroup = null;
+                    updateEnvironmentLabel();
+                } else {
+                    JOptionPane.showMessageDialog(this, "Error deleting group file.");
+                }
+            }
+        }
     }
+
 
     private File getSetupServerDirectory() {
         String userHome = System.getProperty("user.home");

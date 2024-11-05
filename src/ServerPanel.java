@@ -59,7 +59,6 @@ public class ServerPanel extends JPanel {
                 String selectedEnvironment = (String) environmentComboBox.getSelectedItem();
                 if (selectedEnvironment != null) {
                     File environmentFile = new File(ENVIRONMENT_DIR_PATH, selectedEnvironment + ".txt");
-                    groupServerPanel.loadFileContent(environmentFile.getPath()); // Load selected file content
                     groupServerPanel.setEnvironmentName(selectedEnvironment); // Display selected environment name
                 }
             }

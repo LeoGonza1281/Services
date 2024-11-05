@@ -19,26 +19,9 @@ public class GroupServerPanel extends JPanel {
         JPanel leftPanel = new JPanel(new GridLayout(2, 1));
 
         // Panel de Grupos
-        JPanel groupPanel = new JPanel(new GridLayout(4, 1));
-        groupPanel.setBorder(BorderFactory.createTitledBorder("Grupos"));
-        JButton addGroupButton = new JButton("Add");
-        JButton editGroupButton = new JButton("Edit");
-        JButton deleteGroupButton = new JButton("Delete");
-
-        groupPanel.add(addGroupButton);
-        groupPanel.add(editGroupButton);
-        groupPanel.add(deleteGroupButton);
-
+        JPanel groupPanel = createGroupPanel();
         // Panel de Servidores
-        JPanel serverPanel = new JPanel(new GridLayout(4, 1));
-        serverPanel.setBorder(BorderFactory.createTitledBorder("Servidores"));
-        JButton addServerButton = new JButton("AddServer");
-        JButton editServerButton = new JButton("Edit");
-        JButton deleteServerButton = new JButton("Delete");
-
-        serverPanel.add(addServerButton);
-        serverPanel.add(editServerButton);
-        serverPanel.add(deleteServerButton);
+        JPanel serverPanel = createServerPanel();
 
         // Configuración del panel izquierdo y área de texto
         leftPanel.add(groupPanel);
@@ -52,13 +35,44 @@ public class GroupServerPanel extends JPanel {
         add(leftPanel, BorderLayout.WEST);
         add(new JScrollPane(textArea), BorderLayout.CENTER);
 
-        // Acción de botones
+        currentEnvironment = "No environment selected";
+    }
+
+    private JPanel createGroupPanel() {
+        JPanel groupPanel = new JPanel(new GridLayout(4, 1));
+        groupPanel.setBorder(BorderFactory.createTitledBorder("Grupos"));
+
+        JButton addGroupButton = new JButton("Add");
         addGroupButton.addActionListener(e -> addGroup());
-        editGroupButton.addActionListener(e -> editGroup());
-        deleteGroupButton.addActionListener(e -> deleteGroup());
+
+        JButton editGroupButton = new JButton("Edit");
+        editGroupButton.addActionListener(e -> editGroup()); // Puedes implementar más tarde
+
+        JButton deleteGroupButton = new JButton("Delete");
+        deleteGroupButton.addActionListener(e -> deleteGroup()); // Puedes implementar más tarde
+
+        groupPanel.add(addGroupButton);
+        groupPanel.add(editGroupButton);
+        groupPanel.add(deleteGroupButton);
+
+        return groupPanel;
+    }
+
+    private JPanel createServerPanel() {
+        JPanel serverPanel = new JPanel(new GridLayout(4, 1));
+        serverPanel.setBorder(BorderFactory.createTitledBorder("Servidores"));
+
+        JButton addServerButton = new JButton("Add Server");
         addServerButton.addActionListener(e -> addServer());
 
-        currentEnvironment = "No environment selected";
+        JButton editServerButton = new JButton("Edit");
+        JButton deleteServerButton = new JButton("Delete");
+
+        serverPanel.add(addServerButton);
+        serverPanel.add(editServerButton);
+        serverPanel.add(deleteServerButton);
+
+        return serverPanel;
     }
 
     void setEnvironmentName(String environmentName) {
@@ -98,35 +112,15 @@ public class GroupServerPanel extends JPanel {
         try {
             if (currentGroupFile.createNewFile()) {
                 JOptionPane.showMessageDialog(this, "Group file created: " + fileName);
-                loadFileContent(currentGroupFile.getPath());
-                appendToEnvironmentFile("Grupo " + groupNumber);
+                appendToEnvironmentFile("Group " + groupNumber);
                 currentGroup = "Group " + groupNumber;
                 updateEnvironmentLabel();
+                // Aquí ya no se carga el contenido, lo harás cuando se seleccione un grupo.
             } else {
                 JOptionPane.showMessageDialog(this, "Error creating group file.");
             }
         } catch (IOException ex) {
             JOptionPane.showMessageDialog(this, "Error creating group file: " + ex.getMessage());
-        }
-    }
-
-    public void loadFileContent(String path) {
-        textArea.setText("");
-        File file = new File(path);
-        if (!file.exists()) {
-            JOptionPane.showMessageDialog(this, "Error: The file does not exist at the specified path: " + path);
-            return;
-        }
-
-        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
-            String line;
-            StringBuilder content = new StringBuilder();
-            while ((line = br.readLine()) != null) {
-                content.append(line).append("\n");
-            }
-            textArea.setText(content.toString());
-        } catch (IOException e) {
-            JOptionPane.showMessageDialog(this, "Error loading file: " + e.getMessage());
         }
     }
 
@@ -151,7 +145,6 @@ public class GroupServerPanel extends JPanel {
                 try (FileWriter writer = new FileWriter(currentGroupFile, true)) {
                     writer.write(newServer + "\n");
                     JOptionPane.showMessageDialog(this, "Server added to " + currentGroup);
-                    loadFileContent(currentGroupFile.getPath());
                 } catch (IOException e) {
                     JOptionPane.showMessageDialog(this, "Error adding server: " + e.getMessage());
                 }
@@ -162,11 +155,11 @@ public class GroupServerPanel extends JPanel {
     }
 
     private void editGroup() {
-        // Implementation remains the same
+        // Implementación futura
     }
 
     private void deleteGroup() {
-        // Implementation remains the same
+        // Implementación futura
     }
 
     private File getSetupServerDirectory() {

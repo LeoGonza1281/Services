@@ -269,14 +269,19 @@ public class GroupServerPanel extends JPanel {
         if (osName.contains("win")) {
             directory = new File(userHome + "\\Documents\\StartServices\\SetupServer");
         } else if (osName.contains("mac")) {
-            directory = new File(userHome + "/Library/Application Support/SetupServer");
+            directory = new File(userHome + "/Documents/StartServices/SetupServer");
         } else {
             directory = new File(userHome + "/SetupServer");
         }
 
-        if (!directory.exists()) directory.mkdirs();
+        if (!directory.exists()) {
+            directory.mkdirs();
+        }
+
+        System.out.println("Directory path: " + directory.getAbsolutePath()); // Para verificar la ruta
         return directory;
     }
+
 
     private void appendToEnvironmentFile(String groupName) throws IOException {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(new File(getSetupServerDirectory(), currentEnvironment + ".txt"), true))) {

@@ -17,11 +17,11 @@ public class ServiceFetcher {
             // Comando para Windows usando PowerShell
             command = "powershell.exe -Command \"Get-Service | Select-Object Name | Format-Table -AutoSize\"";
         } else if (osName.contains("mac")) {
-            // Comando para macOS (ejemplo para listar servicios)
-            command = "ps aux | grep -i 'service'";  // Comando de ejemplo
+            // Comando para macOS usando ps -fea
+            command = "ps -fea";
         } else if (osName.contains("nix") || osName.contains("nux")) {
-            // Comando para Linux (ejemplo para listar servicios)
-            command = "systemctl list-units --type=service --all"; // Comando para listar servicios en Linux
+            // Comando para Linux usando systemctl
+            command = "systemctl list-units --type=service --all";
         } else {
             System.out.println("Unsupported operating system");
             return services;

@@ -97,128 +97,178 @@ public class GroupServerPanel extends JPanel {
     private void addServer() {
         if (!setCurrentGroupFromSelection("Select a group to add server:")) return;
 
-        String serversInput = getUserInput("Enter server names (comma separated):");
-        if (isEmpty(serversInput)) return;
-
-        String scriptContent = generateScriptContent(serversInput);
-        File scriptFile = createPowerShellScript(scriptContent);
-
-        if (scriptFile != null) {
-            executePowerShellCommand(scriptFile.getAbsolutePath());
+        // Crear una lista de servidores del Server01 al Server56
+        ArrayList<String> serverOptions = new ArrayList<>();
+        for (int i = 1; i <= 56; i++) {
+            serverOptions.add(String.format("Server%02d", i));
         }
-    }
 
-    private String generateScriptContent(String serversInput) {
-        String osName = System.getProperty("os.name").toLowerCase();
-        String[] serverNames = serversInput.split(",");
-        StringBuilder commandBuilder = new StringBuilder();
+        // Crear un JPanel para contener los JCheckBox
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
 
-        if (osName.contains("win")) {
-            // Comando para Windows usando Invoke-Command de PowerShell
-            commandBuilder.append("Invoke-Command -ComputerName ");
-            for (int i = 0; i < serverNames.length; i++) {
-                commandBuilder.append(serverNames[i].trim());
-                if (i < serverNames.length - 1) {
-                    commandBuilder.append(", ");
+        // Crear los JCheckBox para los servidores
+        ArrayList<JCheckBox> checkBoxes = new ArrayList<>();
+        for (String server : serverOptions) {
+            JCheckBox checkBox = new JCheckBox(server);
+            checkBoxes.add(checkBox);
+            panel.add(checkBox);
+        }
+
+        // Crear un JScrollPane para que la lista sea deslizable
+        JScrollPane scrollPane = new JScrollPane(panel);
+        scrollPane.setPreferredSize(new Dimension(200, 150)); // Tamaño pequeño y deslizable
+
+        // Mostrar el diálogo para seleccionar servidores
+        int option = JOptionPane.showConfirmDialog(this, scrollPane, "Select Servers", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+
+        if (option == JOptionPane.OK_OPTION) {
+            // Obtener los servidores seleccionados
+            ArrayList<String> selectedServers = new ArrayList<>();
+            for (JCheckBox checkBox : checkBoxes) {
+                if (checkBox.isSelected()) {
+                    selectedServers.add(checkBox.getText());
                 }
             }
-            commandBuilder.append(" -FilePath c:\\Scripts\\DiskCollect.ps1");
-        } else if (osName.contains("mac")) {
-            // Comando específico para macOS
-            for (String server : serverNames) {
-                commandBuilder.append("ssh user@").append(server.trim())
-                        .append(" \"sh /usr/local/scripts/disk_check.sh\"\n");
+
+            if (selectedServers.isEmpty()) {
+                showMessage("No servers were selected.");
+                return;
             }
-        } else if (osName.contains("linux")) {
-            // Comando específico para Linux
-            for (String server : serverNames) {
-                commandBuilder.append("ssh user@").append(server.trim())
-                        .append(" \"bash /home/user/scripts/disk_monitor.sh\"\n");
-            }
-        } else {
-            showError("Unsupported operating system for remote command execution.");
-        }
 
-        return commandBuilder.toString();
-    }
+            // Leer servidores existentes del archivo
+            ArrayList<String> existingServers = readServersFromFile();
 
-
-
-    private File createPowerShellScript(String scriptContent) {
-        File directory = new File(System.getProperty("user.home") + "\\Documents\\StartServices");
-        if (!directory.exists()) {
-            directory.mkdirs();
-        }
-
-        File scriptFile = new File(directory, "RunDiskCollect.ps1");
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(scriptFile))) {
-            writer.write(scriptContent);
-            showMessage("Script created: " + scriptFile.getAbsolutePath());
-            return scriptFile;
-        } catch (IOException e) {
-            showError("Error creating script file: " + e.getMessage());
-            return null;
-        }
-    }
-
-    private void executePowerShellCommand(String scriptPath) {
-        try {
-            ProcessBuilder processBuilder = new ProcessBuilder("powershell.exe", "-ExecutionPolicy", "Bypass", "-File", scriptPath);
-            processBuilder.redirectErrorStream(true);
-            Process process = processBuilder.start();
-
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-                String line;
-                StringBuilder output = new StringBuilder();
-                while ((line = reader.readLine()) != null) {
-                    output.append(line).append("\n");
-                }
-                int exitCode = process.waitFor();
-                if (exitCode == 0) {
-                    showMessage("Script executed successfully:\n" + output.toString());
-                } else {
-                    showError("Error executing script:\n" + output.toString());
+            // Añadir solo los servidores seleccionados que no estén duplicados
+            for (String server : selectedServers) {
+                if (!existingServers.contains(server)) {
+                    existingServers.add(server);
                 }
             }
-        } catch (IOException | InterruptedException e) {
-            showError("Error executing PowerShell command: " + e.getMessage());
+
+            // Guardar todos los servidores en el archivo del grupo
+            writeServersToFile(existingServers, "Selected servers added successfully.");
         }
     }
+
 
     private void editServer() {
-        if (!validateCurrentGroupFile()) return;
+        if (!setCurrentGroupFromSelection("Select a group to edit server:")) return;
 
-        ArrayList<String> servers = readServersFromFile();
-        if (servers.isEmpty()) {
-            showMessage("No servers found in the group file to edit.");
+        // Leer los servidores existentes del archivo
+        ArrayList<String> existingServers = readServersFromFile();
+
+        if (existingServers.isEmpty()) {
+            showMessage("No servers to edit.");
             return;
         }
 
-        String selectedServer = getUserSelection("Select a server to edit:", servers);
-        if (selectedServer == null) return;
+        // Crear un JPanel para contener los JCheckBox
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
 
-        String newServerDetails = getUserInput("Enter new details for the selected server:", selectedServer);
-        if (isEmpty(newServerDetails)) return;
+        // Crear los JCheckBox para los servidores existentes
+        ArrayList<JCheckBox> checkBoxes = new ArrayList<>();
+        for (String server : existingServers) {
+            JCheckBox checkBox = new JCheckBox(server);
+            checkBoxes.add(checkBox);
+            panel.add(checkBox);
+        }
 
-        servers.set(servers.indexOf(selectedServer), newServerDetails);
-        writeServersToFile(servers, "Server details updated successfully.");
+        // Crear un JScrollPane para que la lista sea deslizable
+        JScrollPane scrollPane = new JScrollPane(panel);
+        scrollPane.setPreferredSize(new Dimension(200, 150)); // Tamaño pequeño y deslizable
+
+        // Mostrar el diálogo para seleccionar el servidor a editar
+        int option = JOptionPane.showConfirmDialog(this, scrollPane, "Select Server to Edit", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+
+        if (option == JOptionPane.OK_OPTION) {
+            // Obtener el servidor seleccionado para editar
+            String serverToEdit = null;
+            for (JCheckBox checkBox : checkBoxes) {
+                if (checkBox.isSelected()) {
+                    serverToEdit = checkBox.getText();  // El servidor seleccionado
+                    break;  // Solo debe ser uno
+                }
+            }
+
+            if (serverToEdit == null) {
+                showMessage("No server was selected to edit.");
+                return;
+            }
+
+            // Mostrar un cuadro de texto para editar el nombre del servidor
+            String newServerName = JOptionPane.showInputDialog(this, "Enter new name for the server:", serverToEdit);
+
+            if (newServerName != null && !newServerName.isEmpty()) {
+                // Verificar si el nuevo nombre ya existe
+                if (existingServers.contains(newServerName)) {
+                    showMessage("The new server name already exists.");
+                    return;
+                }
+
+                // Actualizar el servidor en la lista
+                int index = existingServers.indexOf(serverToEdit);
+                existingServers.set(index, newServerName);
+
+                // Guardar la lista de servidores actualizada en el archivo
+                writeServersToFile(existingServers, "Server updated successfully.");
+            }
+        }
     }
+
 
     private void deleteServer() {
         if (!validateCurrentGroupFile()) return;
 
+        // Leer los servidores existentes del archivo
         ArrayList<String> servers = readServersFromFile();
         if (servers.isEmpty()) {
             showMessage("No servers found in the group file to delete.");
             return;
         }
 
-        String selectedServer = getUserSelection("Select a server to delete:", servers);
-        if (selectedServer == null) return;
+        // Crear un JPanel para contener los JCheckBox
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
 
-        servers.remove(selectedServer);
-        writeServersToFile(servers, "Server deleted successfully.");
+        // Crear los JCheckBox para los servidores existentes
+        ArrayList<JCheckBox> checkBoxes = new ArrayList<>();
+        for (String server : servers) {
+            JCheckBox checkBox = new JCheckBox(server);
+            checkBoxes.add(checkBox);
+            panel.add(checkBox);
+        }
+
+        // Crear un JScrollPane para que la lista sea deslizable
+        JScrollPane scrollPane = new JScrollPane(panel);
+        scrollPane.setPreferredSize(new Dimension(200, 150)); // Tamaño pequeño y deslizable
+
+        // Mostrar el diálogo para seleccionar servidores a eliminar
+        int option = JOptionPane.showConfirmDialog(this, scrollPane, "Select Servers to Delete", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+
+        if (option == JOptionPane.OK_OPTION) {
+            // Obtener los servidores seleccionados para eliminar
+            ArrayList<String> serversToDelete = new ArrayList<>();
+            for (JCheckBox checkBox : checkBoxes) {
+                if (checkBox.isSelected()) {  // Si está seleccionado, lo marcamos para eliminar
+                    serversToDelete.add(checkBox.getText());
+                }
+            }
+
+            if (serversToDelete.isEmpty()) {
+                showMessage("No servers were selected for deletion.");
+                return;
+            }
+
+            // Eliminar los servidores seleccionados
+            servers.removeAll(serversToDelete);
+
+            // Guardar la lista de servidores actualizada en el archivo
+            writeServersToFile(servers, "Servers deleted successfully.");
+        }
     }
+
 
     private void editGroup() {
         if (!setCurrentGroupFromSelection("Select a group to rename:")) return;
@@ -282,7 +332,6 @@ public class GroupServerPanel extends JPanel {
         return directory;
     }
 
-
     private void appendToEnvironmentFile(String groupName) throws IOException {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(new File(getSetupServerDirectory(), currentEnvironment + ".txt"), true))) {
             writer.write(groupName + "\n");
@@ -323,7 +372,6 @@ public class GroupServerPanel extends JPanel {
                         name.matches(Pattern.quote(environmentPrefix) + "\\d+\\.txt")
         );
     }
-
 
     private void writeServersToFile(ArrayList<String> servers, String successMessage) {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(currentGroupFile))) {

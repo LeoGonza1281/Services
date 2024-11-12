@@ -9,7 +9,6 @@ import java.util.List;
 public class StartRunningPanel extends JPanel {
     private JComboBox<String> environmentComboBox;
     private JComboBox<String> groupComboBox;
-    private JList<String> servicesList;
     private JButton runButton;
 
     // Constructor
@@ -19,7 +18,7 @@ public class StartRunningPanel extends JPanel {
         // 1. Panel de Selección de "Environment"
         JPanel environmentPanel = new JPanel(new FlowLayout());
         JLabel environmentLabel = new JLabel("Select Environment:");
-        environmentComboBox = new JComboBox<>(getEnvironments());
+        environmentComboBox = new JComboBox<>(getEnvironments());  // Carga los entornos disponibles
         environmentComboBox.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -38,39 +37,35 @@ public class StartRunningPanel extends JPanel {
         groupComboBox.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                String selectedGroup = (String) groupComboBox.getSelectedItem();
-                updateServiceList(selectedGroup); // Actualiza la lista de servicios según el grupo seleccionado
+                // Aquí se podría hacer algo más si fuera necesario al seleccionar un grupo.
             }
         });
         groupPanel.add(groupLabel);
         groupPanel.add(groupComboBox);
         add(groupPanel, BorderLayout.CENTER);
 
-        // 3. Panel de Selección de "Servicios"
-        JPanel servicesPanel = new JPanel(new BorderLayout());
-        JLabel servicesLabel = new JLabel("Select Services:");
-        servicesList = new JList<>();
-        JScrollPane servicesScrollPane = new JScrollPane(servicesList);
-        servicesPanel.add(servicesLabel, BorderLayout.NORTH);
-        servicesPanel.add(servicesScrollPane, BorderLayout.CENTER);
-        add(servicesPanel, BorderLayout.SOUTH);
-
-        // 4. Botón para ejecutar el script
+        // 3. Botón para ejecutar el script (Si lo necesitas)
         runButton = new JButton("Run Script");
         runButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                runSelectedServicesScript(); // Ejecutar los servicios seleccionados
+                runSelectedGroupScript(); // Ejecutar el script para el grupo seleccionado
             }
         });
         add(runButton, BorderLayout.SOUTH);
     }
 
-    // Método para obtener los entornos (environments) creados
+    // Método para obtener los entornos (environments) disponibles
     private String[] getEnvironments() {
-        // Simulación: Puedes cargar los environments desde un archivo o base de datos
-        // Aquí simplemente estoy simulando con una lista de entornos predefinidos
-        return new String[]{"Environment1", "Environment2", "Environment3"};
+        String userHome = System.getProperty("user.home");
+        File folder = new File(userHome + "\\Documents\\StartServices\\SetupServer"); // Ruta completa
+        File[] files = folder.listFiles((dir, name) -> name.endsWith(".txt") && !name.equals("Environments.txt") && name.matches("[A-Za-z0-9_]+\\.txt"));
+
+        List<String> environments = new ArrayList<>();
+        for (File file : files) {
+            environments.add(file.getName().replace(".txt", ""));  // Agrega el nombre del archivo sin la extensión
+        }
+        return environments.toArray(new String[0]);
     }
 
     // Método para actualizar el JComboBox de grupos basado en el entorno seleccionado
@@ -82,71 +77,37 @@ public class StartRunningPanel extends JPanel {
         }
     }
 
-    // Método para obtener los grupos creados en el entorno seleccionado
+    // Método para obtener los grupos basados en el entorno seleccionado
     private List<String> getGroupsForEnvironment(String environment) {
-        // Simulación: Aquí puedes cargar los grupos desde un archivo o base de datos
-        // Simulando que se cargan dinámicamente según el environment seleccionado
         return loadGroupsFromFile(environment);
     }
 
-    // Método para cargar los grupos desde un archivo
+    // Método para cargar los grupos desde los archivos
     private List<String> loadGroupsFromFile(String environment) {
+        String userHome = System.getProperty("user.home");
         List<String> groups = new ArrayList<>();
-        try (BufferedReader reader = new BufferedReader(new FileReader(environment + "_groups.txt"))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                groups.add(line.trim());
-            }
-        } catch (IOException e) {
-            JOptionPane.showMessageDialog(this, "Error loading groups from file: " + e.getMessage());
+        // Filtro para encontrar archivos con formato [Environment].Group[number].txt
+        File folder = new File(userHome + "\\Documents\\StartServices\\SetupServer");
+        File[] files = folder.listFiles((dir, name) -> name.matches(environment + "\\.Group\\d+\\.txt"));
+
+        for (File file : files) {
+            groups.add(file.getName().replace(".txt", ""));  // Agrega el nombre del archivo sin la extensión
         }
         return groups;
     }
 
-    // Método para actualizar la lista de servicios basados en el grupo seleccionado
-    private void updateServiceList(String selectedGroup) {
-        DefaultListModel<String> serviceModel = new DefaultListModel<>();
-        List<String> services = getServicesForGroup(selectedGroup);
-        for (String service : services) {
-            serviceModel.addElement(service);
-        }
-        servicesList.setModel(serviceModel);
-    }
-
-    // Método para obtener los servicios del grupo seleccionado
-    private List<String> getServicesForGroup(String group) {
-        // Simulación: Aquí puedes cargar los servicios desde un archivo o base de datos
-        return loadServicesFromFile(group);
-    }
-
-    // Método para cargar los servicios desde un archivo
-    private List<String> loadServicesFromFile(String group) {
-        List<String> services = new ArrayList<>();
-        try (BufferedReader reader = new BufferedReader(new FileReader(group + "_services.txt"))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                services.add(line.trim());
-            }
-        } catch (IOException e) {
-            JOptionPane.showMessageDialog(this, "Error loading services from file: " + e.getMessage());
-        }
-        return services;
-    }
-
-    // Método para ejecutar el script con los servicios seleccionados
-    private void runSelectedServicesScript() {
-        List<String> selectedServices = servicesList.getSelectedValuesList();
-        if (selectedServices.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Please select at least one service to run.");
-            return;
-        }
-
+    // Método para ejecutar el script con el grupo seleccionado
+    private void runSelectedGroupScript() {
         String selectedEnvironment = (String) environmentComboBox.getSelectedItem();
         String selectedGroup = (String) groupComboBox.getSelectedItem();
 
-        JOptionPane.showMessageDialog(this, "Running script for " + selectedEnvironment +
-                " in group " + selectedGroup + " with services " + selectedServices);
+        if (selectedGroup == null) {
+            JOptionPane.showMessageDialog(this, "Please select a group to run.");
+            return;
+        }
 
-        // Aquí puedes agregar el código para ejecutar los servicios (PowerShell o script de tu preferencia)
+        JOptionPane.showMessageDialog(this, "Running script for " + selectedEnvironment + " with group " + selectedGroup);
+
+        // Aquí puedes agregar el código para ejecutar el script (PowerShell o cualquier otro tipo de script)
     }
 }

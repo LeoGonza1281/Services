@@ -9,7 +9,7 @@ import java.util.List;
 public class ServiceListPanel extends JPanel {
     private JList<String> servicesList;
     private DefaultListModel<String> serviceModel;
-    private JButton addButton, createListButton;
+    private JButton addButton, createListButton, editListButton, deleteListButton;
     private JTextArea selectedServicesArea;
     private JTextField searchField;
     private JComboBox<String> listDropdown;
@@ -23,93 +23,86 @@ public class ServiceListPanel extends JPanel {
 
         // Initialize the list of created files
         createdLists = new ArrayList<>();
+        new File(BASE_DIR).mkdirs(); // Create base directory if it doesn't exist
 
-        // Ensure the base directory exists
-        new File(BASE_DIR).mkdirs();
-
-        // Panel for searching and creating lists
-        JPanel topPanel = new JPanel();
-        topPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
+        // Top Panel with controls
+        JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
 
         // Search field
         searchField = new JTextField(15);
-        searchField.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                filterServices();
-            }
-        });
+        searchField.addActionListener(e -> filterServices());
 
-        // Button to create a new list
+        // Create New List button
         createListButton = new JButton("Create New List");
-        createListButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                createNewList();
-            }
-        });
+        createListButton.addActionListener(e -> createNewList());
 
         // Dropdown for selecting lists
         listDropdown = new JComboBox<>();
         listDropdown.addItem("Select a list");
+        loadCreatedLists(); // Load existing lists from List.txt
 
-        // Load existing lists from List.txt
-        loadCreatedLists();
+        // Edit List button
+        editListButton = new JButton("Edit List");
+        editListButton.addActionListener(e -> editSelectedList());
 
-        // Add components to the top panel
+        // Delete List button
+        deleteListButton = new JButton("Delete List");
+        deleteListButton.addActionListener(e -> deleteSelectedList());
+
+        // Add components to the top panel in desired order
         topPanel.add(new JLabel("Search:"));
         topPanel.add(searchField);
         topPanel.add(createListButton);
         topPanel.add(listDropdown);
+        topPanel.add(editListButton);
+        topPanel.add(deleteListButton);
 
         add(topPanel, BorderLayout.NORTH);
 
-        // Get the list of services from the system using ServiceFetcher
+        // Service list initialization
         serviceModel = new DefaultListModel<>();
-        List<String> services = ServiceFetcher.fetchServices(); // Assume this method is correctly implemented
-        for (String service : services) {
-            serviceModel.addElement(service);
-        }
+        List<String> services = ServiceFetcher.fetchServices(); // Assume fetchServices is correctly implemented
+        services.forEach(serviceModel::addElement);
 
         servicesList = new JList<>(serviceModel);
         servicesList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         add(new JScrollPane(servicesList), BorderLayout.CENTER);
 
-        // Button to add services to the selected list
+        // Button to add selected services
         addButton = new JButton("Add to ServiceList");
+        addButton.addActionListener(e -> addSelectedServices());
         add(addButton, BorderLayout.SOUTH);
 
-        // Text area to show selected services
+        // Text area for displaying selected services
         selectedServicesArea = new JTextArea(10, 30);
-        selectedServicesArea.setEditable(false); // Make it non-editable
+        selectedServicesArea.setEditable(false);
         add(new JScrollPane(selectedServicesArea), BorderLayout.EAST);
 
-        // Action for adding services
-        addButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                addSelectedServices();
-            }
-        });
-
-        // Action for list selection from dropdown
-        listDropdown.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String selectedItem = (String) listDropdown.getSelectedItem();
-                if (selectedItem != null && !selectedItem.equals("Select a list")) {
-                    int selectedIndex = listDropdown.getSelectedIndex() - 1; // Adjust for "Select a list"
-                    if (selectedIndex >= 0 && selectedIndex < createdLists.size()) {
-                        String selectedListName = createdLists.get(selectedIndex);
-                        loadSelectedListServices(selectedListName); // Load the selected list's services
-                    }
-                } else {
-                    selectedServicesArea.setText(""); // Clear if "Select a list"
-                }
+        // Dropdown action listener for list selection
+        listDropdown.addActionListener(e -> {
+            String selectedItem = (String) listDropdown.getSelectedItem();
+            if (selectedItem != null && !selectedItem.equals("Select a list")) {
+                loadSelectedListServices(selectedItem);
+            } else {
+                selectedServicesArea.setText("");
             }
         });
     }
 
+    // Filters services based on search text
+    private void filterServices() {
+        String searchText = searchField.getText().toLowerCase();
+        DefaultListModel<String> filteredModel = new DefaultListModel<>();
+        for (int i = 0; i < serviceModel.size(); i++) {
+            String service = serviceModel.getElementAt(i);
+            if (service.toLowerCase().contains(searchText)) {
+                filteredModel.addElement(service);
+            }
+        }
+        servicesList.setModel(filteredModel);
+    }
+
+    // Adds selected services to the chosen list
     private void addSelectedServices() {
         List<String> selectedServices = servicesList.getSelectedValuesList();
         if (selectedServices.isEmpty()) {
@@ -123,114 +116,96 @@ public class ServiceListPanel extends JPanel {
             return;
         }
 
-        // Clear the previous selected services
         selectedServicesArea.setText("");
-
-        // Add selected services to the selected list in the JTextArea
         for (String service : selectedServices) {
             selectedServicesArea.append(service + "\n");
-            writeToFile(service, selectedList); // Write to the existing list file
+            appendServiceToFile(service, selectedList);
         }
-
-        // Optionally, display a confirmation message
         JOptionPane.showMessageDialog(this, "Services added to " + selectedList);
     }
 
-    private void writeToFile(String serviceName, String selectedList) {
-        // Construct the filename based on the selected list
-        String fileName = BASE_DIR + selectedList + ".txt"; // Use the existing file in the base directory
-
-        try (FileWriter writer = new FileWriter(fileName, true)) { // Append mode
+    // Appends a service to the selected list file
+    private void appendServiceToFile(String serviceName, String selectedList) {
+        String fileName = BASE_DIR + selectedList + ".txt";
+        try (FileWriter writer = new FileWriter(fileName, true)) {
             writer.write(serviceName + "\n");
         } catch (IOException e) {
             JOptionPane.showMessageDialog(this, "Error writing to file: " + e.getMessage());
         }
     }
 
-    private void filterServices() {
-        String searchText = searchField.getText().toLowerCase();
-        DefaultListModel<String> filteredModel = new DefaultListModel<>();
-
-        for (int i = 0; i < serviceModel.size(); i++) {
-            String service = serviceModel.getElementAt(i);
-            if (service.toLowerCase().contains(searchText)) {
-                filteredModel.addElement(service);
-            }
-        }
-
-        servicesList.setModel(filteredModel);
-    }
-
+    // Creates a new list
     private void createNewList() {
         String listName = JOptionPane.showInputDialog(this, "Enter list name:");
-        if (listName != null && !listName.trim().isEmpty()) {
-            // Trim the input to remove extra spaces
+        if (listName != null && !listName.trim().isEmpty() && !createdLists.contains(listName.trim())) {
             listName = listName.trim();
-
-            // Check if the list already exists
-            if (!createdLists.contains(listName)) {
-                createdLists.add(listName);
-                listDropdown.addItem(listName); // Add directly as the list name without ".txt"
-                JOptionPane.showMessageDialog(this, "List created: " + listName);
-
-                // Write the name of the new list to List.txt
-                writeToListFile(listName);
-
-                // Create the actual new list file
-                createNewListFile(listName);
-            } else {
-                JOptionPane.showMessageDialog(this, "List already exists.");
-            }
+            createdLists.add(listName);
+            listDropdown.addItem(listName);
+            writeListNameToFile(listName);
+            createNewFile(listName);
+            JOptionPane.showMessageDialog(this, "List created: " + listName);
         } else {
-            JOptionPane.showMessageDialog(this, "List name cannot be empty.");
+            JOptionPane.showMessageDialog(this, "Invalid or duplicate list name.");
         }
     }
 
-    private void writeToListFile(String listName) {
-        File file = new File(BASE_DIR + "List.txt");
-        try (FileWriter writer = new FileWriter(file, true)) { // Append mode
+    // Adds a new list name to List.txt
+    private void writeListNameToFile(String listName) {
+        try (FileWriter writer = new FileWriter(BASE_DIR + "List.txt", true)) {
             writer.write(listName + "\n");
         } catch (IOException e) {
             JOptionPane.showMessageDialog(this, "Error writing to List.txt: " + e.getMessage());
         }
     }
 
-    private void createNewListFile(String listName) {
-        File newListFile = new File(BASE_DIR + listName + ".txt");
-        try (FileWriter writer = new FileWriter(newListFile)) {
-            writer.write(""); // Create empty file for the new list
+    // Creates a new list file
+    private void createNewFile(String listName) {
+        try (FileWriter writer = new FileWriter(BASE_DIR + listName + ".txt")) {
+            // Empty file creation
         } catch (IOException e) {
             JOptionPane.showMessageDialog(this, "Error creating file: " + e.getMessage());
         }
     }
 
+    // Loads created lists into dropdown
     private void loadCreatedLists() {
-        File file = new File(BASE_DIR + "List.txt");
-        if (file.exists()) {
-            try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    createdLists.add(line);
-                    listDropdown.addItem(line); // Add the name directly, without ".txt"
-                }
-            } catch (IOException e) {
-                JOptionPane.showMessageDialog(this, "Error reading List.txt: " + e.getMessage());
+        try (BufferedReader reader = new BufferedReader(new FileReader(BASE_DIR + "List.txt"))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                createdLists.add(line);
+                listDropdown.addItem(line);
             }
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(this, "Error reading List.txt: " + e.getMessage());
         }
     }
 
+    // Loads services from the selected list file
     private void loadSelectedListServices(String listName) {
-        selectedServicesArea.setText(""); // Clear the text area
-        File file = new File(BASE_DIR + listName + ".txt"); // Load the corresponding file
-        if (file.exists()) {
-            try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    selectedServicesArea.append(line + "\n"); // Display each service in the text area
-                }
-            } catch (IOException e) {
-                JOptionPane.showMessageDialog(this, "Error reading " + listName + ".txt: " + e.getMessage());
+        selectedServicesArea.setText("");
+        try (BufferedReader reader = new BufferedReader(new FileReader(BASE_DIR + listName + ".txt"))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                selectedServicesArea.append(line + "\n");
             }
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(this, "Error reading " + listName + ".txt: " + e.getMessage());
+        }
+    }
+
+    // Edits the selected list (dummy function for now)
+    private void editSelectedList() {
+        JOptionPane.showMessageDialog(this, "Editing list: " + listDropdown.getSelectedItem());
+    }
+
+    // Deletes the selected list
+    private void deleteSelectedList() {
+        String selectedList = (String) listDropdown.getSelectedItem();
+        if (!selectedList.equals("Select a list")) {
+            createdLists.remove(selectedList);
+            listDropdown.removeItem(selectedList);
+            new File(BASE_DIR + selectedList + ".txt").delete();
+            JOptionPane.showMessageDialog(this, "List deleted: " + selectedList);
         }
     }
 }

@@ -19,7 +19,7 @@ public class Main extends JFrame {
         // Configuración principal de la ventana
         setTitle("Server Management");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(600, 400);
+        setSize(800, 500); // Aumentar el tamaño de la ventana para que los paneles tengan más espacio
         setLocationRelativeTo(null); // Centrar ventana
 
         // Crear el directorio de la aplicación
@@ -34,6 +34,11 @@ public class Main extends JFrame {
         serverPanel = new ServerPanel(cardLayout, mainPanel); // Pasar cardLayout y mainPanel al ServerPanel
         startRunningPanel = new StartRunningPanel(); // Panel para iniciar servicios en los servidores
         ServiceListPanel serviceListPanel = new ServiceListPanel(); // Panel para crear la lista de servicios
+
+        // Establecer tamaño preferido para los paneles, asegurando que ocupen todo el espacio disponible
+        serverPanel.setPreferredSize(new Dimension(800, 500));
+        startRunningPanel.setPreferredSize(new Dimension(800, 500));
+        serviceListPanel.setPreferredSize(new Dimension(800, 500));
 
         // Añadir los paneles al CardLayout
         mainPanel.add(buttonPanel, "Home");

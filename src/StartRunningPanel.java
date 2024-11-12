@@ -10,6 +10,7 @@ public class StartRunningPanel extends JPanel {
     private JComboBox<String> groupComboBox;
     private JComboBox<String> createServiceListComboBox;
     private JButton runButton;
+    private static final String BASE_DIR = System.getProperty("user.home") + "/Documents/StartServices/";
 
     // Constructor
     public StartRunningPanel() {
@@ -17,47 +18,27 @@ public class StartRunningPanel extends JPanel {
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(10, 10, 10, 10);
         gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.anchor = GridBagConstraints.CENTER;
 
-        // 1. Panel de Selección de "Environment"
+        // Panel de Selección de "Environment"
         JLabel environmentLabel = new JLabel("Select Environment:");
         environmentComboBox = new JComboBox<>(getFilteredEnvironments());
-        environmentComboBox.addActionListener(e -> {
-            String selectedEnvironment = (String) environmentComboBox.getSelectedItem();
-            updateGroupComboBox(selectedEnvironment);
-        });
+        environmentComboBox.addActionListener(e -> updateGroupComboBox());
+        addComponent(environmentLabel, gbc, 0, 0);
+        addComponent(environmentComboBox, gbc, 1, 0);
 
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        add(environmentLabel, gbc);
-
-        gbc.gridx = 1;
-        gbc.gridy = 0;
-        add(environmentComboBox, gbc);
-
-        // 2. Panel de Selección de "Group"
+        // Panel de Selección de "Group"
         JLabel groupLabel = new JLabel("Select Group:");
         groupComboBox = new JComboBox<>();
-        gbc.gridx = 0;
-        gbc.gridy = 1;
-        add(groupLabel, gbc);
+        addComponent(groupLabel, gbc, 0, 1);
+        addComponent(groupComboBox, gbc, 1, 1);
 
-        gbc.gridx = 1;
-        gbc.gridy = 1;
-        add(groupComboBox, gbc);
-
-        // 3. Panel de Selección de "Select List"
+        // Panel de Selección de "Select List"
         JLabel createServiceLabel = new JLabel("Select List:");
         createServiceListComboBox = new JComboBox<>(getFilteredCreateServiceLists());
-        gbc.gridx = 0;
-        gbc.gridy = 2;
-        add(createServiceLabel, gbc);
+        addComponent(createServiceLabel, gbc, 0, 2);
+        addComponent(createServiceListComboBox, gbc, 1, 2);
 
-        gbc.gridx = 1;
-        gbc.gridy = 2;
-        add(createServiceListComboBox, gbc);
-
-        // 4. Botón para ejecutar el script
+        // Botón para ejecutar el script
         runButton = new JButton("Run Script");
         runButton.addActionListener(e -> runSelectedGroupScript());
         gbc.gridx = 0;
@@ -66,84 +47,125 @@ public class StartRunningPanel extends JPanel {
         add(runButton, gbc);
     }
 
-    // Método para obtener archivos de SetupServer con formato [environment].txt y excluir Environment.txt
-    private String[] getFilteredEnvironments() {
-        String userHome = System.getProperty("user.home");
-        File folder = new File(userHome + "/Documents/StartServices/SetupServer/");
-
-        // Filtramos los archivos que cumplan con el patrón [A-Za-z0-9_]+.txt y excluimos "Environment.txt"
-        File[] files = folder.listFiles((dir, name) ->
-                name.matches("[A-Za-z0-9_]+\\.txt") && !name.equalsIgnoreCase("Environment.txt"));
-
-        List<String> environments = new ArrayList<>();
-        if (files != null) {
-            for (File file : files) {
-                environments.add(file.getName().replace(".txt", ""));
-            }
-        }
-        return environments.toArray(new String[0]);
+    // Método para añadir componentes
+    private void addComponent(Component comp, GridBagConstraints gbc, int x, int y) {
+        gbc.gridx = x;
+        gbc.gridy = y;
+        add(comp, gbc);
     }
 
-    // Actualizar ComboBox de grupos basado en el archivo seleccionado de ambiente
-    private void updateGroupComboBox(String selectedEnvironment) {
+    // Obtener archivos de SetupServer con formato [environment].txt excluyendo Environment.txt
+    private String[] getFilteredEnvironments() {
+        File folder = new File(BASE_DIR + "SetupServer/");
+        File[] files = folder.listFiles((dir, name) -> name.matches("[A-Za-z0-9_]+\\.txt") && !name.equalsIgnoreCase("Environment.txt"));
+        return getFileNamesWithoutExtension(files);
+    }
+
+    // Obtener archivos de "Create Service List" excluyendo "List.txt"
+    private String[] getFilteredCreateServiceLists() {
+        File folder = new File(BASE_DIR + "CreateServiceList/");
+        File[] files = folder.listFiles((dir, name) -> name.endsWith(".txt") && !name.equalsIgnoreCase("List.txt"));
+        return getFileNamesWithoutExtension(files);
+    }
+
+    // Obtener nombres de archivos sin extensión
+    private String[] getFileNamesWithoutExtension(File[] files) {
+        List<String> fileNames = new ArrayList<>();
+        if (files != null) {
+            for (File file : files) {
+                fileNames.add(file.getName().replace(".txt", ""));
+            }
+        }
+        return fileNames.toArray(new String[0]);
+    }
+
+    // Actualizar ComboBox de grupos
+    private void updateGroupComboBox() {
         groupComboBox.removeAllItems();
-        List<String> groups = getGroupsForFile(selectedEnvironment);
+        String selectedEnvironment = (String) environmentComboBox.getSelectedItem();
+        List<String> groups = readLinesFromFile(BASE_DIR + "SetupServer/" + selectedEnvironment + ".txt");
         for (String group : groups) {
             groupComboBox.addItem(group);
         }
     }
 
-    // Obtener los grupos del archivo seleccionado
-    private List<String> getGroupsForFile(String environmentFile) {
-        String userHome = System.getProperty("user.home");
-        List<String> groups = new ArrayList<>();
-        File file = new File(userHome + "/Documents/StartServices/SetupServer/" + environmentFile + ".txt");
-
+    // Método para leer líneas de un archivo
+    private List<String> readLinesFromFile(String filePath) {
+        List<String> lines = new ArrayList<>();
+        File file = new File(filePath);
         if (file.exists()) {
             try (BufferedReader br = new BufferedReader(new FileReader(file))) {
                 String line;
                 while ((line = br.readLine()) != null) {
-                    groups.add(line);
+                    lines.add(line.trim());
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                showErrorDialog("Error reading file: " + filePath);
             }
         }
-        return groups;
+        return lines;
     }
 
-    // Método para obtener los archivos de "Create Service List" con un filtro para excluir "List.txt"
-    private String[] getFilteredCreateServiceLists() {
-        String userHome = System.getProperty("user.home");
-        File folder = new File(userHome + "/Documents/StartServices/CreateServiceList");
-
-        // Filtramos los archivos para excluir "List.txt"
-        File[] files = folder.listFiles((dir, name) -> name.endsWith(".txt") && !name.equalsIgnoreCase("List.txt"));
-
-        List<String> createServiceLists = new ArrayList<>();
-        if (files != null) {
-            for (File file : files) {
-                createServiceLists.add(file.getName().replace(".txt", ""));
-            }
-        }
-        return createServiceLists.toArray(new String[0]);
-    }
-
-    // Ejecutar script basado en selección
+    // Método para ejecutar el script
     private void runSelectedGroupScript() {
         String selectedEnvironment = (String) environmentComboBox.getSelectedItem();
         String selectedGroup = (String) groupComboBox.getSelectedItem();
-        String selectedCreateService = (String) createServiceListComboBox.getSelectedItem();
+        String selectedServiceList = (String) createServiceListComboBox.getSelectedItem();
 
-        if (selectedGroup == null || selectedCreateService == null) {
-            JOptionPane.showMessageDialog(this, "Please select a group and a list to run.");
+        if (selectedEnvironment == null || selectedGroup == null || selectedServiceList == null) {
+            showErrorDialog("Please make sure to select environment, group, and list.");
             return;
         }
 
-        System.out.println("Selected Environment: " + selectedEnvironment);
-        System.out.println("Selected Group: " + selectedGroup);
-        System.out.println("Selected List: " + selectedCreateService);
+        List<String> servers = readLinesFromFile(BASE_DIR + "SetupServer/" + selectedEnvironment + ".txt");
+        List<String> services = readLinesFromFile(BASE_DIR + "CreateServiceList/" + selectedServiceList + ".txt");
 
-        JOptionPane.showMessageDialog(this, "Execution complete!");
+        runButton.setEnabled(false);
+
+        // Uso de SwingWorker para evitar congelar la interfaz
+        new SwingWorker<Void, Void>() {
+            @Override
+            protected Void doInBackground() {
+                for (String server : servers) {
+                    for (String service : services) {
+                        invokeAndStartService(server, service);
+                    }
+                }
+                return null;
+            }
+
+            @Override
+            protected void done() {
+                runButton.setEnabled(true);
+                JOptionPane.showMessageDialog(StartRunningPanel.this, "Execution complete!");
+            }
+        }.execute();
+    }
+
+    // Método para invocar y encender los servicios
+    private void invokeAndStartService(String server, String service) {
+        try {
+            ProcessBuilder processBuilder = new ProcessBuilder("invoke-command", server, service);
+            processBuilder.redirectErrorStream(true);
+            Process process = processBuilder.start();
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    System.out.println(line);
+                }
+            }
+            int exitCode = process.waitFor();
+            if (exitCode != 0) {
+                System.err.println("Failed to start service: " + service + " on server: " + server);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            showErrorDialog("Error executing command on server: " + server);
+        }
+    }
+
+    // Mostrar cuadro de diálogo de error
+    private void showErrorDialog(String message) {
+        JOptionPane.showMessageDialog(this, message, "Error", JOptionPane.ERROR_MESSAGE);
     }
 }

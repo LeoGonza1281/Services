@@ -116,11 +116,13 @@ public class ServiceListPanel extends JPanel {
             return;
         }
 
-        selectedServicesArea.setText("");
+        // Agregar servicios al archivo
         for (String service : selectedServices) {
-            selectedServicesArea.append(service + "\n");
             appendServiceToFile(service, selectedList);
         }
+
+        // Recargar la vista del área de texto
+        loadSelectedListServices(selectedList);
         JOptionPane.showMessageDialog(this, "Services added to " + selectedList);
     }
 

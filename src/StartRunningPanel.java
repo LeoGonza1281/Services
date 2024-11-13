@@ -57,7 +57,7 @@ public class StartRunningPanel extends JPanel {
     // Obtener archivos de SetupServer con formato [environment].txt excluyendo Environment.txt
     private String[] getFilteredEnvironments() {
         File folder = new File(BASE_DIR + "SetupServer/");
-        File[] files = folder.listFiles((dir, name) -> name.matches("[A-Za-z0-9_]+\\.txt") && !name.equalsIgnoreCase("Environment.txt"));
+        File[] files = folder.listFiles((dir, name) -> name.matches("[A-Za-z0-9_]+\\.txt") && !name.equalsIgnoreCase("Environments.txt"));
         return getFileNamesWithoutExtension(files);
     }
 

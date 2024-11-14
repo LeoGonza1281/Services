@@ -24,6 +24,9 @@ public class Main extends JFrame {
 
         // Crear el directorio de la aplicación
         createAppDirectory();
+        createEnvironmentsFile("SetupServer");
+        createServiceListFile("CreateServiceList");
+
 
         // Crear un CardLayout para cambiar entre los paneles
         cardLayout = new CardLayout();

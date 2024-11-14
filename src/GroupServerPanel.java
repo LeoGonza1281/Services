@@ -97,59 +97,40 @@ public class GroupServerPanel extends JPanel {
     private void addServer() {
         if (!setCurrentGroupFromSelection("Select a group to add server:")) return;
 
-        // Crear una lista de servidores del Server01 al Server56
-        ArrayList<String> serverOptions = new ArrayList<>();
-        for (int i = 1; i <= 56; i++) {
-            serverOptions.add(String.format("Server%02d", i));
+        // Solicitar al usuario que ingrese los servidores manualmente, separados por comas
+        String serverInput = JOptionPane.showInputDialog(this, "Enter server names separated by commas (e.g., Server01, Server02):");
+
+        if (serverInput == null || serverInput.trim().isEmpty()) {
+            showMessage("No servers were entered.");
+            return;
         }
 
-        // Crear un JPanel para contener los JCheckBox
-        JPanel panel = new JPanel();
-        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        // Separar los servidores por comas y eliminar espacios extra
+        String[] serverArray = serverInput.split("\\s*,\\s*");
 
-        // Crear los JCheckBox para los servidores
-        ArrayList<JCheckBox> checkBoxes = new ArrayList<>();
-        for (String server : serverOptions) {
-            JCheckBox checkBox = new JCheckBox(server);
-            checkBoxes.add(checkBox);
-            panel.add(checkBox);
+        // Leer los servidores existentes del archivo
+        ArrayList<String> existingServers = readServersFromFile();
+
+        // Añadir solo los servidores que no están duplicados
+        ArrayList<String> newServers = new ArrayList<>();
+        for (String server : serverArray) {
+            if (!existingServers.contains(server)) {
+                newServers.add(server);
+            }
         }
 
-        // Crear un JScrollPane para que la lista sea deslizable
-        JScrollPane scrollPane = new JScrollPane(panel);
-        scrollPane.setPreferredSize(new Dimension(200, 150)); // Tamaño pequeño y deslizable
-
-        // Mostrar el diálogo para seleccionar servidores
-        int option = JOptionPane.showConfirmDialog(this, scrollPane, "Select Servers", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-
-        if (option == JOptionPane.OK_OPTION) {
-            // Obtener los servidores seleccionados
-            ArrayList<String> selectedServers = new ArrayList<>();
-            for (JCheckBox checkBox : checkBoxes) {
-                if (checkBox.isSelected()) {
-                    selectedServers.add(checkBox.getText());
-                }
-            }
-
-            if (selectedServers.isEmpty()) {
-                showMessage("No servers were selected.");
-                return;
-            }
-
-            // Leer servidores existentes del archivo
-            ArrayList<String> existingServers = readServersFromFile();
-
-            // Añadir solo los servidores seleccionados que no estén duplicados
-            for (String server : selectedServers) {
-                if (!existingServers.contains(server)) {
-                    existingServers.add(server);
-                }
-            }
-
-            // Guardar todos los servidores en el archivo del grupo
-            writeServersToFile(existingServers, "Selected servers added successfully.");
+        if (newServers.isEmpty()) {
+            showMessage("No new servers were added (all servers were already in the list).");
+            return;
         }
+
+        // Agregar los nuevos servidores a la lista existente
+        existingServers.addAll(newServers);
+
+        // Guardar los servidores actualizados en el archivo
+        writeServersToFile(existingServers, "Servers added successfully.");
     }
+
 
 
     private void editServer() {

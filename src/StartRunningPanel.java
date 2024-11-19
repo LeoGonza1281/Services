@@ -152,13 +152,41 @@ public class StartRunningPanel extends JPanel {
             return;
         }
 
-        String scriptPath = BASE_DIR + "runServices.sh";
-        createScript(scriptPath, servers, services);
+        // Crear el archivo invokeServices.ps1
+        String psScriptPath = BASE_DIR + "invokeServices.ps1";
+        createPS1Script(psScriptPath, servers, services);
 
-        if (executeScript(scriptPath)) {
+        // Llamar al script generado
+        if (executeScript(psScriptPath, servers, services)) {
             JOptionPane.showMessageDialog(this, "Script executed successfully!");
         } else {
             showErrorDialog("Failed to execute the script.");
+        }
+    }
+
+    private void createPS1Script(String psScriptPath, List<String> servers, List<String> services) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(psScriptPath))) {
+            // Escribir el encabezado de parámetros para el script PowerShell
+            writer.write("param(\n");
+            writer.write("    [string[]]$ComputerNames,\n");
+            writer.write("    [string[]]$Services\n");
+            writer.write(")\n\n");
+
+            // Comando para ejecutar en cada servidor
+            writer.write("foreach ($server in $ComputerNames) {\n");
+            writer.write("    foreach ($service in $Services) {\n");
+            writer.write("        try {\n");
+            writer.write("            Write-Host \"Starting $service on $server\"\n");
+            writer.write("            Start-Service -Name $service -ComputerName $server\n");
+            writer.write("        } catch {\n");
+            writer.write("            Write-Error \"Failed to start $service on $server\"\n");
+            writer.write("        }\n");
+            writer.write("    }\n");
+            writer.write("}\n");
+
+            writer.flush();
+        } catch (IOException e) {
+            showErrorDialog("Error creating PowerShell script: " + e.getMessage());
         }
     }
 
@@ -170,58 +198,37 @@ public class StartRunningPanel extends JPanel {
         return "unknown";
     }
 
-    private boolean executeScript(String scriptPath) {
+    private boolean executeScript(String scriptPath, List<String> servers, List<String> services) {
         String os = getOperatingSystem();
         ProcessBuilder pb;
-        try {
-            if (!os.equals("windows")) {
-                new ProcessBuilder("chmod", "+x", scriptPath).start().waitFor();
-            }
 
-            pb = os.equals("windows") ?
-                    new ProcessBuilder("cmd.exe", "/c", scriptPath) :
-                    new ProcessBuilder("/bin/bash", scriptPath);
+        try {
+            // Crear los parámetros para PowerShell como listas separadas
+            String serverList = String.join(",", servers);
+            String serviceList = String.join(",", services);
+
+            if (os.equals("windows")) {
+                // Uso de ProcessBuilder para llamar al script PowerShell con parámetros correctos
+                pb = new ProcessBuilder(
+                        "powershell.exe",
+                        "-ExecutionPolicy", "Bypass",
+                        "-File", scriptPath,
+                        "-ComputerNames", "@(" + serverList + ")", // Formato de lista PowerShell
+                        "-Services", "@(" + serviceList + ")" // Formato de lista PowerShell
+                );
+            } else {
+                return false; // Solo ejecutamos en Windows en este caso
+            }
 
             pb.inheritIO();
             return pb.start().waitFor() == 0;
+
         } catch (IOException | InterruptedException e) {
             showErrorDialog("Error executing script: " + e.getMessage());
             return false;
         }
     }
 
-    private void createScript(String scriptPath, List<String> servers, List<String> services) {
-        String os = getOperatingSystem();
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(scriptPath))) {
-            if (os.equals("windows")) writer.write("@echo off\n");
-            else writer.write("#!/bin/bash\n");
-
-            StringBuilder serverList = new StringBuilder();
-            for (String server : servers) serverList.append(server).append(",");
-            if (serverList.length() > 0) serverList.setLength(serverList.length() - 1);
-
-            String psScriptPath = BASE_DIR + "invokeServices.ps1";
-            if (os.equals("windows")) {
-                writer.write("powershell.exe Invoke-Command -ComputerName " + serverList + " -FilePath " + psScriptPath + "\n");
-            } else {
-                writer.write("for server in " + serverList + "; do\n");
-                writer.write("  echo \"Starting services on $server\"\n");
-            }
-
-            for (String service : services) {
-                for (String server : servers) {
-                    if (os.equals("windows")) {
-                        writer.write("powershell.exe -Command \"Start-Service -Name '" + service + "' -ComputerName '" + server + "'\"\n");
-                    } else {
-                        writer.write("ssh " + server + " 'sudo systemctl start " + service + "'\n");
-                    }
-                }
-            }
-            writer.flush();
-        } catch (IOException e) {
-            showErrorDialog("Error creating script: " + e.getMessage());
-        }
-    }
 
     private void showErrorDialog(String message) {
         JOptionPane.showMessageDialog(this, message, "Error", JOptionPane.ERROR_MESSAGE);

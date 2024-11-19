@@ -32,8 +32,8 @@ public class StartRunningPanel extends JPanel {
         addComponent(groupLabel, gbc, 0, 1);
         addComponent(groupComboBox, gbc, 1, 1);
 
-        // Panel de Selección de "Select List"
-        JLabel createServiceLabel = new JLabel("Select List:");
+        // Panel de Selección de "Service List"
+        JLabel createServiceLabel = new JLabel("Select Service List:");
         createServiceListComboBox = new JComboBox<>(getFilteredCreateServiceLists());
         addComponent(createServiceLabel, gbc, 0, 2);
         addComponent(createServiceListComboBox, gbc, 1, 2);
@@ -157,7 +157,7 @@ public class StartRunningPanel extends JPanel {
         createPS1Script(psScriptPath, servers, services);
 
         // Llamar al script generado
-        if (executeScript(psScriptPath, servers, services)) {
+        if (executeScript(psScriptPath)) {
             JOptionPane.showMessageDialog(this, "Script executed successfully!");
         } else {
             showErrorDialog("Failed to execute the script.");
@@ -166,22 +166,23 @@ public class StartRunningPanel extends JPanel {
 
     private void createPS1Script(String psScriptPath, List<String> servers, List<String> services) {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(psScriptPath))) {
-            // Escribir el encabezado de parámetros para el script PowerShell
+            // Encabezado de parámetros
             writer.write("param(\n");
             writer.write("    [string[]]$ComputerNames,\n");
             writer.write("    [string[]]$Services\n");
             writer.write(")\n\n");
 
-            // Comando para ejecutar en cada servidor
-            writer.write("foreach ($server in $ComputerNames) {\n");
-            writer.write("    foreach ($service in $Services) {\n");
+            // Usar Invoke-Command para iniciar servicios remotamente
+            writer.write("foreach ($service in $Services) {\n");
+            writer.write("    Invoke-Command -ComputerName $ComputerNames -ScriptBlock {\n");
+            writer.write("        param($serviceName)\n");
             writer.write("        try {\n");
-            writer.write("            Write-Host \"Starting $service on $server\"\n");
-            writer.write("            Start-Service -Name $service -ComputerName $server\n");
+            writer.write("            Start-Service -Name $serviceName\n");
+            writer.write("            Write-Host \"Started $serviceName on $env:COMPUTERNAME\"\n");
             writer.write("        } catch {\n");
-            writer.write("            Write-Error \"Failed to start $service on $server\"\n");
+            writer.write("            Write-Error \"Failed to start $serviceName on $env:COMPUTERNAME\"\n");
             writer.write("        }\n");
-            writer.write("    }\n");
+            writer.write("    } -ArgumentList $service\n");
             writer.write("}\n");
 
             writer.flush();
@@ -190,36 +191,29 @@ public class StartRunningPanel extends JPanel {
         }
     }
 
-    private String getOperatingSystem() {
+    private boolean executeScript(String scriptPath) {
         String os = System.getProperty("os.name").toLowerCase();
-        if (os.contains("win")) return "windows";
-        if (os.contains("mac")) return "mac";
-        if (os.contains("nix") || os.contains("nux") || os.contains("aix")) return "linux";
-        return "unknown";
-    }
-
-    private boolean executeScript(String scriptPath, List<String> servers, List<String> services) {
-        String os = getOperatingSystem();
-        ProcessBuilder pb;
+        if (!os.contains("win")) {
+            showErrorDialog("This tool only works on Windows.");
+            return false;
+        }
 
         try {
-            // Crear los parámetros para PowerShell como listas separadas
+            // Convertir servidores y servicios en formato de lista para PowerShell
+            List<String> servers = readLinesFromFile(BASE_DIR + "SetupServer/" + groupComboBox.getSelectedItem() + ".txt");
+            List<String> services = readLinesFromFile(BASE_DIR + "CreateServiceList/" + createServiceListComboBox.getSelectedItem() + ".txt");
+
             String serverList = String.join(",", servers);
             String serviceList = String.join(",", services);
 
-            if (os.equals("windows")) {
-                // Uso de ProcessBuilder para llamar al script PowerShell con parámetros correctos
-                pb = new ProcessBuilder(
-                        "powershell.exe",
-                        "-ExecutionPolicy", "Bypass",
-                        "-File", scriptPath,
-                        "-ComputerNames", "@(" + serverList + ")", // Formato de lista PowerShell
-                        "-Services", "@(" + serviceList + ")" // Formato de lista PowerShell
-                );
-            } else {
-                return false; // Solo ejecutamos en Windows en este caso
-            }
-
+            // Ejecutar PowerShell
+            ProcessBuilder pb = new ProcessBuilder(
+                    "powershell.exe",
+                    "-ExecutionPolicy", "Bypass",
+                    "-File", scriptPath,
+                    "-ComputerNames", "@(" + serverList + ")",
+                    "-Services", "@(" + serviceList + ")"
+            );
             pb.inheritIO();
             return pb.start().waitFor() == 0;
 
@@ -228,7 +222,6 @@ public class StartRunningPanel extends JPanel {
             return false;
         }
     }
-
 
     private void showErrorDialog(String message) {
         JOptionPane.showMessageDialog(this, message, "Error", JOptionPane.ERROR_MESSAGE);

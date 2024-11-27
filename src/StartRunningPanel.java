@@ -109,16 +109,22 @@ public class StartRunningPanel extends JPanel {
     private void updateGroupComboBox() {
         groupComboBox.removeAllItems();
         String selectedEnvironment = (String) environmentComboBox.getSelectedItem();
+
         if (selectedEnvironment != null) {
-            List<String> groups = readLinesFromFile(BASE_DIR + "SetupServer/" + selectedEnvironment + ".txt");
-            for (String group : groups) {
-                if (group.endsWith(".txt")) {
-                    group = group.replace(".txt", "");
+            File folder = new File(BASE_DIR + "SetupServer/");
+            File[] files = folder.listFiles((dir, name) -> name.startsWith(selectedEnvironment + ".") && name.endsWith(".txt"));
+
+            if (files != null) {
+                for (File file : files) {
+                    // Extraer el nombre del archivo sin la extensión .txt
+                    String groupName = file.getName().replace(".txt", "");
+                    groupComboBox.addItem(groupName);
                 }
-                groupComboBox.addItem(group);
             }
         }
     }
+
+
 
     private List<String> readLinesFromFile(String filePath) {
         List<String> lines = new ArrayList<>();
@@ -166,30 +172,68 @@ public class StartRunningPanel extends JPanel {
 
     private void createPS1Script(String psScriptPath, List<String> servers, List<String> services) {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(psScriptPath))) {
-            // Encabezado de parámetros
+            // Escribimos los parámetros del script
             writer.write("param(\n");
             writer.write("    [string[]]$ComputerNames,\n");
             writer.write("    [string[]]$Services\n");
             writer.write(")\n\n");
 
-            // Usar Invoke-Command para iniciar servicios remotamente
+            // Escribimos los servidores en el script
+            writer.write("\n# Lista de Servidores\n");
+            writer.write("$ComputerNames = @(\n");
+            for (int i = 0; i < servers.size(); i++) {
+                writer.write("    \"" + servers.get(i) + "\"");
+                if (i < servers.size() - 1) {
+                    writer.write(",\n");
+                } else {
+                    writer.write("\n");
+                }
+            }
+            writer.write(")\n");
+
+            // Escribimos los servicios en el script
+            writer.write("\n# Lista de Servicios\n");
+            writer.write("$Services = @(\n");
+            for (int i = 0; i < services.size(); i++) {
+                writer.write("    \"" + services.get(i) + "\"");
+                if (i < services.size() - 1) {
+                    writer.write(",\n");
+                } else {
+                    writer.write("\n");
+                }
+            }
+            writer.write(")\n");
+
+            writer.write("\n# Iniciar los servicios en los servidores\n");
             writer.write("foreach ($service in $Services) {\n");
-            writer.write("    Invoke-Command -ComputerName $ComputerNames -ScriptBlock {\n");
-            writer.write("        param($serviceName)\n");
+            writer.write("    foreach ($server in $ComputerNames) {\n");
             writer.write("        try {\n");
-            writer.write("            Start-Service -Name $serviceName\n");
-            writer.write("            Write-Host \"Started $serviceName on $env:COMPUTERNAME\"\n");
+
+            writer.write("            # Imprimir el servicio y servidor que se está utilizando\n");
+            writer.write("            Write-Host \"Attempting to start $service on $server\"\n");
+
+            writer.write("            Invoke-Command -ComputerName $server -ScriptBlock {\n");
+            writer.write("                param($serviceName)\n");
+            writer.write("                Write-Host \"Starting service: $serviceName\"\n");
+            writer.write("                Start-Service -Name $serviceName\n");
+            writer.write("                Write-Host \"Started $serviceName on $env:COMPUTERNAME\"\n");
+            writer.write("            } -ArgumentList $service\n");
+
             writer.write("        } catch {\n");
-            writer.write("            Write-Error \"Failed to start $serviceName on $env:COMPUTERNAME\"\n");
+            writer.write("            Write-Error \"Failed to start $service on $server\"\n");
             writer.write("        }\n");
-            writer.write("    } -ArgumentList $service\n");
+            writer.write("    }\n");
             writer.write("}\n");
 
-            writer.flush();
+
+            writer.flush();  // Asegurarse de que el contenido esté escrito al archivoSe
         } catch (IOException e) {
             showErrorDialog("Error creating PowerShell script: " + e.getMessage());
         }
     }
+
+
+
 
     private boolean executeScript(String scriptPath) {
         String os = System.getProperty("os.name").toLowerCase();

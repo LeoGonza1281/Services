@@ -72,6 +72,14 @@ public class GroupServerPanel extends JPanel {
         String groupName = getUserInput("Enter the group name:");
         if (isEmpty(groupName)) return;
 
+        // Eliminar espacios en blanco
+        groupName = groupName.trim().replaceAll("\\s+", "");
+
+        if (groupName.isEmpty()) {
+            showError("Group name cannot be empty after removing spaces.");
+            return;
+        }
+
         String fileName = currentEnvironment + "." + groupName + ".txt";
         currentGroupFile = new File(getSetupServerDirectory(), fileName);
 
@@ -93,6 +101,7 @@ public class GroupServerPanel extends JPanel {
             showError("Error creating group file: " + ex.getMessage());
         }
     }
+
 
     private void editGroup() {
         if (!setCurrentGroupFromSelection("Select a group to rename:")) return;

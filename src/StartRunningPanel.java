@@ -112,7 +112,11 @@ public class StartRunningPanel extends JPanel {
 
         if (selectedEnvironment != null) {
             File folder = new File(BASE_DIR + "SetupServer/");
-            File[] files = folder.listFiles((dir, name) -> name.startsWith(selectedEnvironment + ".") && name.endsWith(".txt"));
+            File[] files = folder.listFiles((dir, name) ->
+                    name.startsWith(selectedEnvironment + ".") && // Solo archivos del environment
+                            name.endsWith(".txt") &&
+                            name.split("\\.").length > 2 // Asegurarse de que haya al menos un punto adicional (formato válido)
+            );
 
             if (files != null) {
                 for (File file : files) {
@@ -123,7 +127,6 @@ public class StartRunningPanel extends JPanel {
             }
         }
     }
-
 
 
     private List<String> readLinesFromFile(String filePath) {

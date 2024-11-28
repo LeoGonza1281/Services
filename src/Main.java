@@ -38,7 +38,6 @@ public class Main extends JFrame {
         startRunningPanel = new StartRunningPanel(); // Panel para iniciar servicios en los servidores
         ServiceListPanel serviceListPanel = new ServiceListPanel(); // Panel para crear la lista de servicios
 
-        // Establecer tamaño preferido para los paneles, asegurando que ocupen todo el espacio disponible
         serverPanel.setPreferredSize(new Dimension(800, 500));
         startRunningPanel.setPreferredSize(new Dimension(800, 500));
         serviceListPanel.setPreferredSize(new Dimension(800, 500));

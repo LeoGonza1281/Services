@@ -107,7 +107,9 @@ public class GroupServerPanel extends JPanel {
         String newGroupName = getUserInput("Enter the new group name:");
         if (isEmpty(newGroupName)) return;
 
-        File newGroupFile = new File(getSetupServerDirectory(), currentEnvironment + "." + newGroupName + ".txt");
+        String newFileName = currentEnvironment + "." + newGroupName + ".txt";
+        File newGroupFile = new File(getSetupServerDirectory(), newFileName);
+
         if (newGroupFile.exists()) {
             showError("A group with this name already exists.");
             return;
@@ -125,6 +127,12 @@ public class GroupServerPanel extends JPanel {
 
     private void deleteGroup() {
         if (!setCurrentGroupFromSelection("Select a group to delete:")) return;
+
+        if (!currentGroupFile.getName().startsWith(currentEnvironment + ".")) {
+            showError("Invalid group format for deletion.");
+            return;
+        }
+
         if (!confirmDelete(currentGroupFile.getName())) return;
 
         if (currentGroupFile.delete()) {
@@ -295,7 +303,13 @@ public class GroupServerPanel extends JPanel {
     private String[] getGroupFiles() {
         File setupServerDir = getSetupServerDirectory();
         if (setupServerDir == null || !setupServerDir.exists()) return null;
-        return setupServerDir.list((dir, name) -> name.endsWith(".txt"));
+
+        // Filtrar solo los archivos con formato [environment].[groupname].txt
+        return setupServerDir.list((dir, name) ->
+                name.startsWith(currentEnvironment + ".") &&
+                        name.endsWith(".txt") &&
+                        !name.equals(currentEnvironment + ".txt") // Excluir [environment].txt
+        );
     }
 
     private File getSetupServerDirectory() {

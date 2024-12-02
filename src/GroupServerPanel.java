@@ -89,7 +89,6 @@ public class GroupServerPanel extends JPanel {
 
         try {
             if (currentGroupFile.createNewFile()) {
-                appendToEnvironmentFile(fileName);
                 currentGroup = groupName;
                 updateEnvironmentLabel();
                 showMessage("Group file created: " + fileName);
@@ -136,7 +135,6 @@ public class GroupServerPanel extends JPanel {
         if (!confirmDelete(currentGroupFile.getName())) return;
 
         if (currentGroupFile.delete()) {
-            removeGroupFromEnvironmentFile(currentGroupFile.getName());
             resetCurrentGroup();
             showMessage("Group deleted successfully.");
         } else {
@@ -279,54 +277,29 @@ public class GroupServerPanel extends JPanel {
     }
 
     private void showGroupContentInTextArea() {
-        if (!validateCurrentGroupFile()) {
-            textArea.setText("No group selected or file is invalid.");
-            return;
-        }
+        if (!validateCurrentGroupFile()) return;
 
-        StringBuilder content = new StringBuilder("Servers in group '" + currentGroup + "':\n");
-        ArrayList<String> servers = readServersFromFile();
-        if (servers.isEmpty()) {
-            content.append("(No servers in this group.)");
-        } else {
-            for (String server : servers) {
-                content.append("- ").append(server).append("\n");
+        StringBuilder content = new StringBuilder();
+        try (BufferedReader reader = new BufferedReader(new FileReader(currentGroupFile))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                content.append(line).append("\n");
             }
+        } catch (IOException ex) {
+            showError("Error reading file: " + ex.getMessage());
         }
         textArea.setText(content.toString());
     }
 
-    private boolean validateCurrentGroupFile() {
-        return currentGroupFile != null && currentGroupFile.exists();
-    }
-
-    private String[] getGroupFiles() {
-        File setupServerDir = getSetupServerDirectory();
-        if (setupServerDir == null || !setupServerDir.exists()) return null;
-
-        // Filtrar solo los archivos con formato [environment].[groupname].txt
-        return setupServerDir.list((dir, name) ->
-                name.startsWith(currentEnvironment + ".") &&
-                        name.endsWith(".txt") &&
-                        !name.equals(currentEnvironment + ".txt") // Excluir [environment].txt
-        );
-    }
-
-    private File getSetupServerDirectory() {
-        return new File(System.getProperty("user.home"), "Documents/StartServices/SetupServer");
-    }
-
     private ArrayList<String> readServersFromFile() {
         ArrayList<String> servers = new ArrayList<>();
-        if (validateCurrentGroupFile()) {
-            try (BufferedReader reader = new BufferedReader(new FileReader(currentGroupFile))) {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    servers.add(line.trim());
-                }
-            } catch (IOException e) {
-                showError("Error reading server file: " + e.getMessage());
+        try (BufferedReader reader = new BufferedReader(new FileReader(currentGroupFile))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                servers.add(line);
             }
+        } catch (IOException ex) {
+            showError("Error reading file: " + ex.getMessage());
         }
         return servers;
     }
@@ -339,52 +312,73 @@ public class GroupServerPanel extends JPanel {
             }
             showMessage(successMessage);
             showGroupContentInTextArea();
-        } catch (IOException e) {
-            showError("Error writing to server file: " + e.getMessage());
+        } catch (IOException ex) {
+            showError("Error writing file: " + ex.getMessage());
         }
     }
 
-    private void appendToEnvironmentFile(String fileName) {
-        // Simula agregar el nombre de grupo al archivo de environment
+    private String[] getGroupFiles() {
+        File setupServerDir = getSetupServerDirectory();
+
+        // Filtrar solo los archivos con formato [environment].[groupname].txt
+        return setupServerDir.list((dir, name) ->
+                name.startsWith(currentEnvironment + ".") &&
+                        name.endsWith(".txt") &&
+                        !name.equals(currentEnvironment + ".txt") // Excluir [environment].txt
+        );
     }
 
-    private void removeGroupFromEnvironmentFile(String groupName) {
-        // Simula eliminar el grupo del archivo de environment
+
+    private File getSetupServerDirectory() {
+        String userHome = System.getProperty("user.home");
+        return new File(userHome, "Documents/StartServices/SetupServer");
+    }
+
+    private boolean validateCurrentGroupFile() {
+        if (currentGroupFile == null) {
+            showMessage("No group selected.");
+            return false;
+        }
+        if (!currentGroupFile.exists()) {
+            showMessage("Group file does not exist.");
+            return false;
+        }
+        return true;
+    }
+
+    private void resetCurrentGroup() {
+        currentGroupFile = null;
+        currentGroup = null;
+        updateEnvironmentLabel();
+        textArea.setText("");
     }
 
     private boolean environmentNotSelected() {
-        if (currentEnvironment.equals("No environment selected")) {
-            showMessage("Please select an environment first.");
+        if (currentEnvironment == null || currentEnvironment.isEmpty() || currentEnvironment.equals("No environment selected")) {
+            showMessage("No environment selected.");
             return true;
         }
         return false;
+    }
+
+    private boolean isEmpty(String input) {
+        return input == null || input.trim().isEmpty();
+    }
+
+    private void showMessage(String message) {
+        JOptionPane.showMessageDialog(this, message, "Message", JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    private void showError(String message) {
+        JOptionPane.showMessageDialog(this, message, "Error", JOptionPane.ERROR_MESSAGE);
     }
 
     private String getUserInput(String message) {
         return JOptionPane.showInputDialog(this, message);
     }
 
-    private boolean isEmpty(String str) {
-        return str == null || str.trim().isEmpty();
-    }
-
-    private boolean confirmDelete(String fileName) {
-        int result = JOptionPane.showConfirmDialog(this, "Are you sure you want to delete " + fileName + "?", "Confirm Delete", JOptionPane.YES_NO_OPTION);
-        return result == JOptionPane.YES_OPTION;
-    }
-
-    private void showMessage(String message) {
-        JOptionPane.showMessageDialog(this, message);
-    }
-
-    private void showError(String error) {
-        JOptionPane.showMessageDialog(this, error, "Error", JOptionPane.ERROR_MESSAGE);
-    }
-
-    private void resetCurrentGroup() {
-        currentGroup = null;
-        currentGroupFile = null;
-        updateEnvironmentLabel();
-        showGroupContentInTextArea(); // Limpia el contenido del panel de texto
+    private boolean confirmDelete(String name) {
+        return JOptionPane.showConfirmDialog(this, "Do you really want to delete " + name + "?", "Confirm Delete", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION;
     }
 }
+

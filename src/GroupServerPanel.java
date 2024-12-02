@@ -2,6 +2,9 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.*;
 import java.util.ArrayList;
+import java.nio.file.Files;
+import java.io.IOException;
+
 
 public class GroupServerPanel extends JPanel {
     private JTextArea textArea;
@@ -20,7 +23,7 @@ public class GroupServerPanel extends JPanel {
         textArea = new JTextArea();
         textArea.setEditable(false);
 
-        environmentLabel = new JLabel(currentEnvironment, JLabel.CENTER);
+        environmentLabel = new JLabel(currentEnvironment, SwingConstants.CENTER);
         add(environmentLabel, BorderLayout.NORTH);
         add(leftPanel, BorderLayout.WEST);
         add(new JScrollPane(textArea), BorderLayout.CENTER);
@@ -134,13 +137,15 @@ public class GroupServerPanel extends JPanel {
 
         if (!confirmDelete(currentGroupFile.getName())) return;
 
-        if (currentGroupFile.delete()) {
+        try {
+            Files.delete(currentGroupFile.toPath());
             resetCurrentGroup();
             showMessage("Group deleted successfully.");
-        } else {
-            showError("Error deleting group file.");
+        } catch (IOException ex) {
+            showError("Error deleting group file: " + ex.getMessage());
         }
     }
+
 
     private void addServer() {
         if (!setCurrentGroupFromSelection("Select a group to add server:")) return;

@@ -31,7 +31,7 @@ public class GroupServerPanel extends JPanel {
 
     private JPanel createGroupPanel() {
         JPanel groupPanel = new JPanel(new GridLayout(3, 1));
-        groupPanel.setBorder(BorderFactory.createTitledBorder("Grupos"));
+        groupPanel.setBorder(BorderFactory.createTitledBorder("Groups"));
 
         addButton(groupPanel, "Add", e -> addGroup());
         addButton(groupPanel, "Edit", e -> editGroup());
@@ -42,7 +42,7 @@ public class GroupServerPanel extends JPanel {
 
     private JPanel createServerPanel() {
         JPanel serverPanel = new JPanel(new GridLayout(3, 1));
-        serverPanel.setBorder(BorderFactory.createTitledBorder("Servidores"));
+        serverPanel.setBorder(BorderFactory.createTitledBorder("Servers"));
 
         addButton(serverPanel, "Add Server", e -> addServer());
         addButton(serverPanel, "Edit", e -> editServer());

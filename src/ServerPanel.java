@@ -36,11 +36,14 @@ public class ServerPanel extends JPanel {
             environmentComboBox.addItem(env);
         }
 
-        JPanel inputPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
+        JPanel inputPanel = new JPanel();
+        inputPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 10, 10));
+
+        // Add components in the desired order
         inputPanel.add(environmentTextField);
         inputPanel.add(createEnvironmentButton);
-        inputPanel.add(deleteEnvironmentButton);
         inputPanel.add(environmentComboBox);
+        inputPanel.add(deleteEnvironmentButton);
 
         createEnvironmentButton.addActionListener(e -> createEnvironment());
         deleteEnvironmentButton.addActionListener(e -> deleteEnvironment());

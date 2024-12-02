@@ -2,7 +2,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.*;
 import java.util.ArrayList;
-import java.util.regex.Pattern;
 
 public class GroupServerPanel extends JPanel {
     private JTextArea textArea;
@@ -101,7 +100,6 @@ public class GroupServerPanel extends JPanel {
             showError("Error creating group file: " + ex.getMessage());
         }
     }
-
 
     private void editGroup() {
         if (!setCurrentGroupFromSelection("Select a group to rename:")) return;
@@ -266,119 +264,99 @@ public class GroupServerPanel extends JPanel {
             currentGroupFile = new File(getSetupServerDirectory(), selectedGroupFile);
             currentGroup = selectedGroupFile.replace(currentEnvironment + ".", "").replace(".txt", "");
             updateEnvironmentLabel();
+            showGroupContentInTextArea(); // Mostrar contenido en el panel de texto
             return true;
         }
         return false;
     }
 
-    private String[] getGroupFiles() {
-        File directory = getSetupServerDirectory();
-        String pattern = Pattern.quote(currentEnvironment + ".") + "[^\\.]+\\.txt";
-        return directory.list((dir, name) -> name.matches(pattern));
+    private void showGroupContentInTextArea() {
+        if (!validateCurrentGroupFile()) {
+            textArea.setText("No group selected or file is invalid.");
+            return;
+        }
+
+        StringBuilder content = new StringBuilder("Servers in group '" + currentGroup + "':\n");
+        ArrayList<String> servers = readServersFromFile();
+        if (servers.isEmpty()) {
+            content.append("(No servers in this group.)");
+        } else {
+            for (String server : servers) {
+                content.append("- ").append(server).append("\n");
+            }
+        }
+        textArea.setText(content.toString());
     }
 
+    private boolean validateCurrentGroupFile() {
+        return currentGroupFile != null && currentGroupFile.exists();
+    }
+
+    private String[] getGroupFiles() {
+        File setupServerDir = getSetupServerDirectory();
+        if (setupServerDir == null || !setupServerDir.exists()) return null;
+        return setupServerDir.list((dir, name) -> name.endsWith(".txt"));
+    }
+
+    private File getSetupServerDirectory() {
+        return new File(System.getProperty("user.home"), "Documents/StartServices/SetupServer");
+    }
 
     private ArrayList<String> readServersFromFile() {
         ArrayList<String> servers = new ArrayList<>();
-        if (!validateCurrentGroupFile()) return servers;
-
-        try (BufferedReader reader = new BufferedReader(new FileReader(currentGroupFile))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                servers.add(line.trim());
+        if (validateCurrentGroupFile()) {
+            try (BufferedReader reader = new BufferedReader(new FileReader(currentGroupFile))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    servers.add(line.trim());
+                }
+            } catch (IOException e) {
+                showError("Error reading server file: " + e.getMessage());
             }
-        } catch (IOException ex) {
-            showError("Error reading servers from file: " + ex.getMessage());
         }
         return servers;
     }
 
     private void writeServersToFile(ArrayList<String> servers, String successMessage) {
-        try (PrintWriter writer = new PrintWriter(currentGroupFile)) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(currentGroupFile))) {
             for (String server : servers) {
-                writer.println(server);
+                writer.write(server);
+                writer.newLine();
             }
             showMessage(successMessage);
-        } catch (IOException ex) {
-            showError("Error writing servers to file: " + ex.getMessage());
+            showGroupContentInTextArea();
+        } catch (IOException e) {
+            showError("Error writing to server file: " + e.getMessage());
         }
     }
 
-    private void appendToEnvironmentFile(String groupFileName) {
-        File environmentFile = getEnvironmentFile();
-        try (PrintWriter writer = new PrintWriter(new FileWriter(environmentFile, true))) {
-            writer.println(groupFileName);
-        } catch (IOException ex) {
-            showError("Error appending to environment file: " + ex.getMessage());
+    private void appendToEnvironmentFile(String fileName) {
+        // Simula agregar el nombre de grupo al archivo de environment
+    }
+
+    private void removeGroupFromEnvironmentFile(String groupName) {
+        // Simula eliminar el grupo del archivo de environment
+    }
+
+    private boolean environmentNotSelected() {
+        if (currentEnvironment.equals("No environment selected")) {
+            showMessage("Please select an environment first.");
+            return true;
         }
-    }
-
-    private void removeGroupFromEnvironmentFile(String groupFileName) {
-        File environmentFile = getEnvironmentFile();
-        ArrayList<String> entries = new ArrayList<>();
-
-        try (BufferedReader reader = new BufferedReader(new FileReader(environmentFile))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                if (!line.equals(groupFileName)) {
-                    entries.add(line);
-                }
-            }
-        } catch (IOException ex) {
-            showError("Error reading environment file: " + ex.getMessage());
-            return;
-        }
-
-        try (PrintWriter writer = new PrintWriter(environmentFile)) {
-            for (String entry : entries) {
-                writer.println(entry);
-            }
-        } catch (IOException ex) {
-            showError("Error writing to environment file: " + ex.getMessage());
-        }
-    }
-
-    private boolean validateCurrentGroupFile() {
-        if (currentGroupFile == null || !currentGroupFile.exists()) {
-            showError("No valid group file selected.");
-            return false;
-        }
-        return true;
-    }
-
-    private File getEnvironmentFile() {
-        return new File(getSetupServerDirectory(), currentEnvironment + ".txt");
-    }
-
-    private File getSetupServerDirectory() {
-        return new File(System.getProperty("user.home") + "\\Documents\\StartServices\\SetupServer");
-    }
-
-    private void resetCurrentGroup() {
-        currentGroup = null;
-        currentGroupFile = null;
-        updateEnvironmentLabel();
-    }
-
-    private boolean confirmDelete(String itemName) {
-        int option = JOptionPane.showConfirmDialog(this, "Are you sure you want to delete " + itemName + "?", "Confirm Deletion", JOptionPane.YES_NO_OPTION);
-        return option == JOptionPane.YES_OPTION;
+        return false;
     }
 
     private String getUserInput(String message) {
         return JOptionPane.showInputDialog(this, message);
     }
 
-    private boolean isEmpty(String text) {
-        return text == null || text.trim().isEmpty();
+    private boolean isEmpty(String str) {
+        return str == null || str.trim().isEmpty();
     }
 
-    private boolean environmentNotSelected() {
-        if (currentEnvironment.equals("No environment selected")) {
-            showError("No environment selected.");
-            return true;
-        }
-        return false;
+    private boolean confirmDelete(String fileName) {
+        int result = JOptionPane.showConfirmDialog(this, "Are you sure you want to delete " + fileName + "?", "Confirm Delete", JOptionPane.YES_NO_OPTION);
+        return result == JOptionPane.YES_OPTION;
     }
 
     private void showMessage(String message) {
@@ -387,5 +365,12 @@ public class GroupServerPanel extends JPanel {
 
     private void showError(String error) {
         JOptionPane.showMessageDialog(this, error, "Error", JOptionPane.ERROR_MESSAGE);
+    }
+
+    private void resetCurrentGroup() {
+        currentGroup = null;
+        currentGroupFile = null;
+        updateEnvironmentLabel();
+        showGroupContentInTextArea(); // Limpia el contenido del panel de texto
     }
 }

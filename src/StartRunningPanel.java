@@ -5,14 +5,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class StartRunningPanel extends JPanel {
-    private JComboBox<String> environmentComboBox;
-    private JComboBox<String> groupComboBox;
-    private JComboBox<String> createServiceListComboBox;
-    private JButton runButton;
-    private JButton refreshButton;
+    private JComboBox<String> environmentComboBox; // ComboBox para seleccionar el entorno
+    private JComboBox<String> groupComboBox;      // ComboBox para seleccionar el grupo
+    private JComboBox<String> createServiceListComboBox; // ComboBox para seleccionar la lista de servicios
+    private JButton runButton;                   // Botón para ejecutar el script
     private static final String BASE_DIR = System.getProperty("user.home") + "/Documents/StartServices/";
 
-    // Constructor
+    // Constructor del panel
     public StartRunningPanel() {
         setLayout(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
@@ -21,8 +20,8 @@ public class StartRunningPanel extends JPanel {
 
         // Panel de Selección de "Environment"
         JLabel environmentLabel = new JLabel("Select Environment:");
-        environmentComboBox = new JComboBox<>(getFilteredEnvironments());
-        environmentComboBox.addActionListener(e -> updateGroupComboBox());
+        environmentComboBox = new JComboBox<>(getFilteredEnvironments()); // Inicializa el ComboBox con los entornos filtrados
+        environmentComboBox.addActionListener(e -> updateGroupComboBox()); // Actualiza los grupos automáticamente al cambiar el entorno
         addComponent(environmentLabel, gbc, 0, 0);
         addComponent(environmentComboBox, gbc, 1, 0);
 
@@ -34,145 +33,119 @@ public class StartRunningPanel extends JPanel {
 
         // Panel de Selección de "Service List"
         JLabel createServiceLabel = new JLabel("Select Service List:");
-        createServiceListComboBox = new JComboBox<>(getFilteredCreateServiceLists());
+        createServiceListComboBox = new JComboBox<>(getFilteredCreateServiceLists()); // Inicializa el ComboBox con las listas de servicios filtradas
         addComponent(createServiceLabel, gbc, 0, 2);
         addComponent(createServiceListComboBox, gbc, 1, 2);
 
-        // Botón para actualizar los ComboBoxes
-        refreshButton = new JButton("Refresh");
-        refreshButton.addActionListener(e -> refreshComboBoxes());
-        gbc.gridx = 0;
-        gbc.gridy = 3;
-        add(refreshButton, gbc);
-
         // Botón para ejecutar el script
         runButton = new JButton("Run Script");
-        runButton.addActionListener(e -> runSelectedGroupScript());
+        runButton.addActionListener(e -> runSelectedGroupScript()); // Ejecuta el script cuando se hace clic en el botón
         gbc.gridx = 1;
         gbc.gridy = 3;
         add(runButton, gbc);
     }
 
+    // Método para agregar componentes al panel con GridBagLayout
     private void addComponent(Component comp, GridBagConstraints gbc, int x, int y) {
         gbc.gridx = x;
         gbc.gridy = y;
         add(comp, gbc);
     }
 
-    private void refreshComboBoxes() {
-        updateEnvironmentComboBox();
-        updateCreateServiceListComboBox();
-    }
-
-    private void updateEnvironmentComboBox() {
-        environmentComboBox.removeAllItems();
-        String[] environments = getFilteredEnvironments();
-        for (String environment : environments) {
-            environmentComboBox.addItem(environment);
-        }
-        if (environmentComboBox.getItemCount() > 0) {
-            environmentComboBox.setSelectedIndex(0);
-            updateGroupComboBox();
-        }
-    }
-
-    private void updateCreateServiceListComboBox() {
-        createServiceListComboBox.removeAllItems();
-        String[] serviceLists = getFilteredCreateServiceLists();
-        for (String list : serviceLists) {
-            createServiceListComboBox.addItem(list);
-        }
-    }
-
-    private String[] getFilteredEnvironments() {
-        File folder = new File(BASE_DIR + "SetupServer/");
-        File[] files = folder.listFiles((dir, name) -> name.matches("[A-Za-z0-9_]+\\.txt") && !name.equalsIgnoreCase("Environments.txt"));
-        return getFileNamesWithoutExtension(files);
-    }
-
-    private String[] getFilteredCreateServiceLists() {
-        File folder = new File(BASE_DIR + "CreateServiceList/");
-        File[] files = folder.listFiles((dir, name) -> name.endsWith(".txt") && !name.equalsIgnoreCase("List.txt"));
-        return getFileNamesWithoutExtension(files);
-    }
-
-    private String[] getFileNamesWithoutExtension(File[] files) {
-        List<String> fileNames = new ArrayList<>();
-        if (files != null) {
-            for (File file : files) {
-                fileNames.add(file.getName().replace(".txt", ""));
-            }
-        }
-        return fileNames.toArray(new String[0]);
-    }
-
+    // Actualiza el ComboBox de "Group" basado en el entorno seleccionado
     private void updateGroupComboBox() {
-        groupComboBox.removeAllItems();
-        String selectedEnvironment = (String) environmentComboBox.getSelectedItem();
+        groupComboBox.removeAllItems();  // Limpia el ComboBox de grupos
+        String selectedEnvironment = (String) environmentComboBox.getSelectedItem();  // Obtiene el entorno seleccionado
 
         if (selectedEnvironment != null) {
             File folder = new File(BASE_DIR + "SetupServer/");
             File[] files = folder.listFiles((dir, name) ->
-                    name.startsWith(selectedEnvironment + ".") && // Solo archivos del environment
+                    name.startsWith(selectedEnvironment + ".") &&  // Filtra los archivos por el nombre del entorno
                             name.endsWith(".txt") &&
-                            name.split("\\.").length > 2 // Asegurarse de que haya al menos un punto adicional (formato válido)
+                            name.split("\\.").length > 2  // Asegura que el archivo tiene el formato adecuado
             );
 
             if (files != null) {
                 for (File file : files) {
-                    // Extraer el nombre del archivo sin la extensión .txt
-                    String groupName = file.getName().replace(".txt", "");
-                    groupComboBox.addItem(groupName);
+                    String groupName = file.getName().replace(".txt", "");  // Extrae el nombre del grupo sin la extensión
+                    groupComboBox.addItem(groupName);  // Agrega los grupos al ComboBox
                 }
             }
         }
     }
 
+    // Obtiene los entornos filtrados desde el directorio SetupServer
+    private String[] getFilteredEnvironments() {
+        File folder = new File(BASE_DIR + "SetupServer/");
+        File[] files = folder.listFiles((dir, name) -> name.matches("[A-Za-z0-9_]+\\.txt") && !name.equalsIgnoreCase("Environments.txt"));
+        return getFileNamesWithoutExtension(files);  // Extrae solo los nombres de los archivos sin la extensión ".txt"
+    }
 
+    // Obtiene las listas de servicios filtradas desde el directorio CreateServiceList
+    private String[] getFilteredCreateServiceLists() {
+        File folder = new File(BASE_DIR + "CreateServiceList/");
+        File[] files = folder.listFiles((dir, name) -> name.endsWith(".txt") && !name.equalsIgnoreCase("List.txt"));
+        return getFileNamesWithoutExtension(files);  // Extrae solo los nombres de los archivos sin la extensión ".txt"
+    }
+
+    // Extrae los nombres de los archivos sin la extensión ".txt"
+    private String[] getFileNamesWithoutExtension(File[] files) {
+        List<String> fileNames = new ArrayList<>();
+        if (files != null) {
+            for (File file : files) {
+                fileNames.add(file.getName().replace(".txt", ""));  // Elimina la extensión ".txt"
+            }
+        }
+        return fileNames.toArray(new String[0]);
+    }
+
+    // Lee las líneas de un archivo y las devuelve como una lista
     private List<String> readLinesFromFile(String filePath) {
         List<String> lines = new ArrayList<>();
         try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
             String line;
             while ((line = br.readLine()) != null) {
-                lines.add(line.trim());
+                lines.add(line.trim());  // Agrega cada línea del archivo a la lista
             }
         } catch (IOException e) {
-            showErrorDialog("Error reading file: " + filePath);
+            showErrorDialog("Error reading file: " + filePath);  // Muestra un error si no se puede leer el archivo
         }
         return lines;
     }
 
+    // Ejecuta el script seleccionado en función de los entornos, grupos y listas de servicios
     private void runSelectedGroupScript() {
         String selectedEnvironment = (String) environmentComboBox.getSelectedItem();
         String selectedGroup = (String) groupComboBox.getSelectedItem();
         String selectedServiceList = (String) createServiceListComboBox.getSelectedItem();
 
         if (selectedEnvironment == null || selectedGroup == null || selectedServiceList == null) {
-            showErrorDialog("Please select environment, group, and service list.");
+            showErrorDialog("Please select environment, group, and service list.");  // Muestra un error si no se seleccionan todos los elementos
             return;
         }
 
         String groupFilePath = BASE_DIR + "SetupServer/" + selectedGroup + ".txt";
-        List<String> servers = readLinesFromFile(groupFilePath);
-        List<String> services = readLinesFromFile(BASE_DIR + "CreateServiceList/" + selectedServiceList + ".txt");
+        List<String> servers = readLinesFromFile(groupFilePath);  // Lee los servidores del archivo seleccionado
+        List<String> services = readLinesFromFile(BASE_DIR + "CreateServiceList/" + selectedServiceList + ".txt");  // Lee los servicios del archivo seleccionado
 
         if (servers.isEmpty() || services.isEmpty()) {
-            showErrorDialog("No servers or services found.");
+            showErrorDialog("No servers or services found.");  // Muestra un error si no se encuentran servidores o servicios
             return;
         }
 
-        // Crear el archivo invokeServices.ps1
+        // Crear el archivo PowerShell invokeServices.ps1
         String psScriptPath = BASE_DIR + "invokeServices.ps1";
-        createPS1Script(psScriptPath, servers, services);
+        createPS1Script(psScriptPath, servers, services);  // Crea el script PowerShell
 
-        // Llamar al script generado
+        // Ejecuta el script generado
         if (executeScript(psScriptPath)) {
-            JOptionPane.showMessageDialog(this, "Script executed successfully!");
+            JOptionPane.showMessageDialog(this, "Script executed successfully!");  // Muestra un mensaje de éxito
         } else {
-            showErrorDialog("Failed to execute the script.");
+            showErrorDialog("Failed to execute the script.");  // Muestra un error si falla la ejecución
         }
     }
 
+    // Crea el archivo PowerShell que invoca los servicios en los servidores
     private void createPS1Script(String psScriptPath, List<String> servers, List<String> services) {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(psScriptPath))) {
             // Escribimos los parámetros del script
@@ -228,20 +201,22 @@ public class StartRunningPanel extends JPanel {
             writer.write("    }\n");
             writer.write("}\n");
 
-
-            writer.flush();  // Asegurarse de que el contenido esté escrito al archivoSe
+            writer.flush();  // Asegurarse de que el contenido esté escrito al archivo
         } catch (IOException e) {
-            showErrorDialog("Error creating PowerShell script: " + e.getMessage());
+            showErrorDialog("Error creating PowerShell script: " + e.getMessage());  // Muestra un error si no se puede crear el script
         }
     }
 
+    // Muestra un cuadro de diálogo de error con el mensaje proporcionado
+    private void showErrorDialog(String message) {
+        JOptionPane.showMessageDialog(this, message, "Error", JOptionPane.ERROR_MESSAGE);
+    }
 
-
-
+    // Ejecuta el script PowerShell y devuelve si la ejecución fue exitosa
     private boolean executeScript(String scriptPath) {
         String os = System.getProperty("os.name").toLowerCase();
         if (!os.contains("win")) {
-            showErrorDialog("This tool only works on Windows.");
+            showErrorDialog("This tool only works on Windows.");  // Verifica si el sistema operativo es Windows
             return false;
         }
 
@@ -265,12 +240,8 @@ public class StartRunningPanel extends JPanel {
             return pb.start().waitFor() == 0;
 
         } catch (IOException | InterruptedException e) {
-            showErrorDialog("Error executing script: " + e.getMessage());
+            showErrorDialog("Error executing script: " + e.getMessage());  // Muestra un error si no se puede ejecutar el script
             return false;
         }
-    }
-
-    private void showErrorDialog(String message) {
-        JOptionPane.showMessageDialog(this, message, "Error", JOptionPane.ERROR_MESSAGE);
     }
 }

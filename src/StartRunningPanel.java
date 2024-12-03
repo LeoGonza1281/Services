@@ -191,6 +191,7 @@ public class StartRunningPanel extends JPanel {
             writer.write("            Invoke-Command -ComputerName $server -ScriptBlock {\n");
             writer.write("                param($serviceName)\n");
             writer.write("                Write-Host \"Starting service: $serviceName\"\n");
+            writer.write("                Stop-Service -Name $serviceName\n");
             writer.write("                Start-Service -Name $serviceName\n");
             writer.write("                Write-Host \"Started $serviceName on $env:COMPUTERNAME\"\n");
             writer.write("            } -ArgumentList $service\n");

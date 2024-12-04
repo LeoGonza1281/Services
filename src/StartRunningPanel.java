@@ -190,10 +190,10 @@ public class StartRunningPanel extends JPanel {
 
             writer.write("            Invoke-Command -ComputerName $server -ScriptBlock {\n");
             writer.write("                param($serviceName)\n");
-            writer.write("                Write-Host \"Starting service: $serviceName\"\n");
-            writer.write("                Stop-Service -Name $serviceName\n");
-            writer.write("                Start-Service -Name $serviceName\n");
-            writer.write("                Write-Host \"Started $serviceName on $env:COMPUTERNAME\"\n");
+            writer.write("                Write-Host \"Starting service: $service\"\n");
+            writer.write("                Stop-Service -Name $services\n");
+            writer.write("                Start-Service -Name $services\n");
+            writer.write("                Write-Host \"Started $services on $env:COMPUTERNAME\"\n");
             writer.write("            } -ArgumentList $service\n");
 
             writer.write("        } catch {\n");
@@ -201,8 +201,9 @@ public class StartRunningPanel extends JPanel {
             writer.write("        }\n");
             writer.write("    }\n");
             writer.write("}\n");
-
             writer.flush();  // Asegurarse de que el contenido esté escrito al archivo
+
+
         } catch (IOException e) {
             showErrorDialog("Error creating PowerShell script: " + e.getMessage());  // Muestra un error si no se puede crear el script
         }

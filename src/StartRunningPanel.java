@@ -192,34 +192,31 @@ public class StartRunningPanel extends JPanel {
             }
             writer.write(")\n");
 
-            writer.write("\n# Iniciar los servicios en los servidores\n");
-            writer.write("foreach ($service in $Services) {\n");
-            writer.write("    foreach ($server in $ComputerNames) {\n");
-            writer.write("        try {\n");
+            writer.write("\n# Reiniciar los servicios en los servidores\n");
+            writer.write("foreach ($service in $Services) " + "         {\n");
+            writer.write("        try " + "{\n");
 
             writer.write("            # Imprimir el servicio y servidor que se está utilizando\n");
-            writer.write("            Write-Host \"Attempting to start $service on $server\"\n");
+            writer.write("            Write-Host \"Attempting to Restart $service on all servers: $ComputerNames\"\n");
 
-            writer.write("            Invoke-Command -ComputerName $server -ScriptBlock {\n");
+            writer.write("            Invoke-Command -ComputerName $ComputerNames -ScriptBlock {\n");
             writer.write("                param($serviceName)\n");
             writer.write("                Write-Host \"Starting service: $service\"\n");
-            writer.write("                Stop-Service -Name $services\n");
-            writer.write("                Start-Service -Name $services\n");
-            writer.write("                Write-Host \"Started $services on $env:COMPUTERNAME\"\n");
-            writer.write("            } -ArgumentList $service\n");
+            writer.write("                Restart-Service -Name $service\n\n");
+            writer.write("                Write-Host \"Started $service on $env:COMPUTERNAME\"\n");
+            writer.write("             -ArgumentList $service }\n");
 
-            writer.write("        } catch {\n");
-            writer.write("            Write-Error \"Failed to start $service on $server\"\n");
+            writer.write("     } catch {\n");
+            writer.write("            Write-Error \"Failed to start $service on $ComputerNames\"\n");
             writer.write("        }\n");
             writer.write("    }\n");
-            writer.write("}\n");
             writer.flush();  // Asegurarse de que el contenido esté escrito al archivo
-
 
         } catch (IOException e) {
             showErrorDialog("Error creating PowerShell script: " + e.getMessage());  // Muestra un error si no se puede crear el script
         }
     }
+
 
     // Muestra un cuadro de diálogo de error con el mensaje proporcionado
     private void showErrorDialog(String message) {

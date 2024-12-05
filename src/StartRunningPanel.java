@@ -52,6 +52,18 @@ public class StartRunningPanel extends JPanel {
         add(comp, gbc);
     }
 
+    public void updateAllComboBoxes() {
+        // Actualizar el ComboBox de "Environment"
+        environmentComboBox.setModel(new DefaultComboBoxModel<>(getFilteredEnvironments()));
+
+        // Limpiar y actualizar el ComboBox de "Group"
+        groupComboBox.removeAllItems();
+        updateGroupComboBox();
+
+        // Actualizar el ComboBox de "Service List"
+        createServiceListComboBox.setModel(new DefaultComboBoxModel<>(getFilteredCreateServiceLists()));
+    }
+
     // Actualiza el ComboBox de "Group" basado en el entorno seleccionado
     private void updateGroupComboBox() {
         groupComboBox.removeAllItems();  // Limpia el ComboBox de grupos

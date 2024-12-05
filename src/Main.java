@@ -77,9 +77,14 @@ public class Main extends JFrame {
         buttonPanel.startRunningButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                // Cambiar al panel "Start Running"
                 cardLayout.show(mainPanel, "Start Running");
+
+                // Actualizar los ComboBoxes en el panel "Start Running"
+                startRunningPanel.updateAllComboBoxes();  // Esto actualizará los ComboBoxes con los datos más recientes
             }
         });
+
     }
 
     // Método para crear la carpeta "StartServices" en la carpeta de Documentos del usuario

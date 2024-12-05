@@ -95,26 +95,33 @@ public class ServerPanel extends JPanel {
     }
 
     private void createEnvironment() {
-        String environmentName = environmentTextField.getText().trim();
-        if (!isValidEnvironmentName(environmentName)) {
-            showErrorDialog("Environment name contains invalid characters.");
+        // Eliminar todos los espacios
+        String environmentName = environmentTextField.getText().replaceAll("\\s+", "");
+
+        // Validación de que el nombre no esté vacío
+        if (environmentName.isEmpty()) {
+            showErrorDialog("Please enter a valid environment name.");
             return;
         }
-        if (!environmentName.isEmpty()) {
-            if (!environments.contains(environmentName)) {
-                environments.add(environmentName);
-                environmentComboBox.addItem(environmentName);
-                environmentTextField.setText("");
-                saveEnvironmentToFile(environmentName);
-                createEnvironmentFile(environmentName);
-                showSuccessDialog("Environment created successfully.");
-            } else {
-                showErrorDialog("Environment already exists.");
-            }
-        } else {
-            showErrorDialog("Please enter a valid environment name.");
+
+        // Comprobar si el nombre del entorno ya existe
+        if (environments.contains(environmentName)) {
+            showErrorDialog("Environment already exists.");
+            return;
         }
+
+        // Agregar el nuevo entorno a la lista y combo box
+        environments.add(environmentName);
+        environmentComboBox.addItem(environmentName);
+        environmentTextField.setText(""); // Limpiar el campo de texto
+
+        // Guardar el entorno en el archivo y crear su archivo asociado
+        saveEnvironmentToFile(environmentName);
+        createEnvironmentFile(environmentName);
+
+        showSuccessDialog("Environment created successfully.");
     }
+
 
     private void deleteEnvironment() {
         String selectedEnvironment = (String) environmentComboBox.getSelectedItem();

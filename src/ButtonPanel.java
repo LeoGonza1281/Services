@@ -1,13 +1,10 @@
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
 public class ButtonPanel extends JPanel {
     public JButton setupServerButton;
     public JButton createServiceListButton;
     public JButton startRunningButton;
-    public JButton createReportButton;
 
     public ButtonPanel() {
         // Use GridBagLayout for flexible layout
@@ -23,10 +20,9 @@ public class ButtonPanel extends JPanel {
         setupServerButton = new JButton("Setup Server");
         createServiceListButton = new JButton("Create ServiceList");
         startRunningButton = new JButton("Start Running");
-        createReportButton = new JButton("Create Report");
 
         // Set consistent button properties
-        JButton[] buttons = {setupServerButton, createServiceListButton, startRunningButton, createReportButton};
+        JButton[] buttons = {setupServerButton, createServiceListButton, startRunningButton};
         for (JButton button : buttons) {
             button.setForeground(Color.BLACK);
             button.setFont(new Font("Arial", Font.BOLD, 14)); // Set a readable font size
@@ -41,22 +37,5 @@ public class ButtonPanel extends JPanel {
             gbc.gridy++;
         }
 
-        // Action for the "Create Report" button
-        createReportButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                System.out.println(e.getSource());
-                createReport();
-            }
-        });
-    }
-
-    private void createReport() {
-        // Create an instance of the report generator
-        ReportGenerator reportGenerator = new ReportGenerator();
-        // Call the method to generate the report
-        String reportStatus = reportGenerator.generateReport();
-        // Show the status in a dialog box
-        JOptionPane.showMessageDialog(this, reportStatus);
     }
 }

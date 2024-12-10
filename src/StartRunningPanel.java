@@ -89,9 +89,16 @@ public class StartRunningPanel extends JPanel {
     // Obtiene los entornos filtrados desde el directorio SetupServer
     private String[] getFilteredEnvironments() {
         File folder = new File(BASE_DIR + "SetupServer/");
-        File[] files = folder.listFiles((dir, name) -> name.matches("[A-Za-z0-9_]+\\.txt") && !name.equalsIgnoreCase("Environments.txt"));
+        File[] files = folder.listFiles((dir, name) ->
+                name.endsWith(".txt") &&                // Solo archivos con extensión .txt
+                        !name.equals("Environments.txt") &&     // Excluye específicamente Environments.txt
+                        name.split("\\.").length == 2           // Asegura que sea solo un nombre de entorno
+        );
         return getFileNamesWithoutExtension(files);  // Extrae solo los nombres de los archivos sin la extensión ".txt"
     }
+
+
+
 
     // Obtiene las listas de servicios filtradas desde el directorio CreateServiceList
     private String[] getFilteredCreateServiceLists() {

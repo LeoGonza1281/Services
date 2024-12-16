@@ -199,7 +199,7 @@ public class StartRunningPanel extends JPanel {
             writer.write("            param($serviceName)\n");
             writer.write("            Write-Host \"Starting service: $serviceName\"\n");
             writer.write("            Restart-Service -Name $serviceName\n");
-            writer.write("            Write-Host \"Started $serviceName on $env:COMPUTERNAME\"\n");
+            writer.write("            Write-Host \"Started $serviceName on $ComputerNames\"\n");
             writer.write("        } -ArgumentList $service\n");
             writer.write("    } catch {\n");
             writer.write("        Write-Error \"Failed to start $service on $ComputerNames\"\n");

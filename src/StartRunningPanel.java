@@ -174,7 +174,7 @@ public class StartRunningPanel extends JPanel {
             writer.write(")\n\n");
 
             // Escribimos los servidores en el script
-            writer.write("\n# Lista de Servidores\n");
+            writer.write("# Lista de Servidores\n");
             writer.write("$ComputerNames = @(\n");
             for (int i = 0; i < servers.size(); i++) {
                 writer.write("    \"" + servers.get(i) + "\"");
@@ -187,7 +187,7 @@ public class StartRunningPanel extends JPanel {
             writer.write(")\n");
 
             // Escribimos los servicios en el script
-            writer.write("\n# Lista de Servicios\n");
+            writer.write("# Lista de Servicios\n");
             writer.write("$Services = @(\n");
             for (int i = 0; i < services.size(); i++) {
                 writer.write("    \"" + services.get(i) + "\"");
@@ -200,29 +200,32 @@ public class StartRunningPanel extends JPanel {
             writer.write(")\n");
 
             writer.write("\n# Reiniciar los servicios en los servidores\n");
-            writer.write("foreach ($service in $Services) " + "         {\n");
-            writer.write("        try " + "{\n");
-
-            writer.write("            # Imprimir el servicio y servidor que se está utilizando\n");
-            writer.write("            Write-Host \"Attempting to Restart $service on all servers: $ComputerNames\"\n");
-
-            writer.write("            Invoke-Command -ComputerName $ComputerNames -ScriptBlock {\n");
-            writer.write("                param($serviceName)\n");
-            writer.write("                Write-Host \"Starting service: $service\"\n");
-            writer.write("                Restart-Service -Name $service\n\n");
-            writer.write("                Write-Host \"Started $service on $env:COMPUTERNAME\"\n");
-            writer.write("             -ArgumentList $service }\n");
-
-            writer.write("     } catch {\n");
-            writer.write("            Write-Error \"Failed to start $service on $ComputerNames\"\n");
+            writer.write("foreach ($server in $ComputerNames) {\n");
+            writer.write("    try {\n");
+            writer.write("        Write-Host \"Attempting to restart services on server: $server\"\n");
+            writer.write("        Invoke-Command -ComputerName $server -ScriptBlock {\n");
+            writer.write("            param($remoteServices)\n");
+            writer.write("            foreach ($service in $remoteServices) {\n");
+            writer.write("                try {\n");
+            writer.write("                    Write-Host \"Restarting service: $service\"\n");
+            writer.write("                    Restart-Service -Name $service -ErrorAction Stop\n");
+            writer.write("                    Write-Host \"Successfully restarted $service on $env:COMPUTERNAME\"\n");
+            writer.write("                } catch {\n");
+            writer.write("                    Write-Error \"Failed to restart $service on $env:COMPUTERNAME: $_\"\n");
+            writer.write("                }\n");
+            writer.write("            }\n");
             writer.write("        }\n");
-            writer.write("    }\n");
-            writer.flush();  // Asegurarse de que el contenido esté escrito al archivo
+            writer.write("    } catch {\n");
 
+            writer.write("    }\n");
+            writer.write("}\n");
+
+            writer.flush();  // Asegurarse de que el contenido esté escrito al archivo
         } catch (IOException e) {
             showErrorDialog("Error creating PowerShell script: " + e.getMessage());  // Muestra un error si no se puede crear el script
         }
     }
+
 
 
     // Muestra un cuadro de diálogo de error con el mensaje proporcionado

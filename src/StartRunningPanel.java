@@ -139,30 +139,31 @@ public class StartRunningPanel extends JPanel {
         String selectedServiceList = (String) createServiceListComboBox.getSelectedItem();
 
         if (selectedEnvironment == null || selectedGroup == null || selectedServiceList == null) {
-            showErrorDialog("Please select environment, group, and service list.");  // Muestra un error si no se seleccionan todos los elementos
+            showErrorDialog("Please select environment, group, and service list.");
             return;
         }
 
         String groupFilePath = BASE_DIR + "SetupServer/" + selectedGroup + ".txt";
-        List<String> servers = readLinesFromFile(groupFilePath);  // Lee los servidores del archivo seleccionado
-        List<String> services = readLinesFromFile(BASE_DIR + "CreateServiceList/" + selectedServiceList + ".txt");  // Lee los servicios del archivo seleccionado
+        List<String> servers = readLinesFromFile(groupFilePath);
+        List<String> services = readLinesFromFile(BASE_DIR + "CreateServiceList/" + selectedServiceList + ".txt");
 
         if (servers.isEmpty() || services.isEmpty()) {
-            showErrorDialog("No servers or services found.");  // Muestra un error si no se encuentran servidores o servicios
+            showErrorDialog("No servers or services found.");
             return;
         }
 
         // Crear el archivo PowerShell invokeServices.ps1
         String psScriptPath = BASE_DIR + "invokeServices.ps1";
-        createPS1Script(psScriptPath, servers, services);  // Crea el script PowerShell
+        createPS1Script(psScriptPath, servers, services);
 
         // Ejecuta el script generado
         if (executeScript(psScriptPath)) {
-            JOptionPane.showMessageDialog(this, "Script executed successfully!");  // Muestra un mensaje de éxito
+            JOptionPane.showMessageDialog(this, "Script executed successfully!");
         } else {
-            showErrorDialog("Failed to execute the script.");  // Muestra un error si falla la ejecución
+            showErrorDialog("Failed to execute the script.");
         }
     }
+
 
     // Crea el archivo PowerShell que invoca los servicios en los servidores
     private void createPS1Script(String psScriptPath, List<String> servers, List<String> services) {
@@ -176,55 +177,41 @@ public class StartRunningPanel extends JPanel {
             // Escribimos los servidores en el script
             writer.write("\n# Lista de Servidores\n");
             writer.write("$ComputerNames = @(\n");
-            for (int i = 0; i < servers.size(); i++) {
-                writer.write("    \"" + servers.get(i) + "\"");
-                if (i < servers.size() - 1) {
-                    writer.write(",\n");
-                } else {
-                    writer.write("\n");
-                }
+            for (String server : servers) {
+                writer.write("    \"" + server + "\"\n");
             }
             writer.write(")\n");
 
             // Escribimos los servicios en el script
             writer.write("\n# Lista de Servicios\n");
             writer.write("$Services = @(\n");
-            for (int i = 0; i < services.size(); i++) {
-                writer.write("    \"" + services.get(i) + "\"");
-                if (i < services.size() - 1) {
-                    writer.write(",\n");
-                } else {
-                    writer.write("\n");
-                }
+            for (String service : services) {
+                writer.write("    \"" + service + "\"\n");
             }
             writer.write(")\n");
 
             writer.write("\n# Reiniciar los servicios en los servidores\n");
-            writer.write("foreach ($service in $Services) " + "         {\n");
-            writer.write("        try " + "{\n");
-
-            writer.write("            # Imprimir el servicio y servidor que se está utilizando\n");
-            writer.write("            Write-Host \"Attempting to Restart $service on all servers: $ComputerNames\"\n");
-
-            writer.write("            Invoke-Command -ComputerName $ComputerNames -ScriptBlock {\n");
-            writer.write("                param($serviceName)\n");
-            writer.write("                Write-Host \"Starting service: $service\"\n");
-            writer.write("                Restart-Service -Name $service\n\n");
-            writer.write("                Write-Host \"Started $service on $env:COMPUTERNAME\"\n");
-            writer.write("             -ArgumentList $service }\n");
-
-            writer.write("     } catch {\n");
-            writer.write("            Write-Error \"Failed to start $service on $ComputerNames\"\n");
-            writer.write("        }\n");
+            writer.write("foreach ($service in $Services) {\n");
+            writer.write("    try {\n");
+            writer.write("        # Imprimir el servicio y servidor que se está utilizando\n");
+            writer.write("        Write-Host \"Attempting to Restart $service on all servers: $ComputerNames\"\n");
+            writer.write("        Invoke-Command -ComputerName $ComputerNames -ScriptBlock {\n");
+            writer.write("            param($serviceName)\n");
+            writer.write("            Write-Host \"Starting service: $serviceName\"\n");
+            writer.write("            Restart-Service -Name $serviceName\n");
+            writer.write("            Write-Host \"Started $serviceName on $env:COMPUTERNAME\"\n");
+            writer.write("        } -ArgumentList $service\n");
+            writer.write("    } catch {\n");
+            writer.write("        Write-Error \"Failed to start $service on $ComputerNames\"\n");
             writer.write("    }\n");
+            writer.write("}\n");
+
             writer.flush();  // Asegurarse de que el contenido esté escrito al archivo
 
         } catch (IOException e) {
-            showErrorDialog("Error creating PowerShell script: " + e.getMessage());  // Muestra un error si no se puede crear el script
+            showErrorDialog("Error creating PowerShell script: " + e.getMessage());
         }
     }
-
-
     // Muestra un cuadro de diálogo de error con el mensaje proporcionado
     private void showErrorDialog(String message) {
         JOptionPane.showMessageDialog(this, message, "Error", JOptionPane.ERROR_MESSAGE);

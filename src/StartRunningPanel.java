@@ -50,18 +50,22 @@ public class StartRunningPanel extends JPanel {
         gbc.gridx = x;
         gbc.gridy = y;
         add(comp, gbc);
+        System.out.println("Component added at GridBagConstraints (" + x + ", " + y + ")");
     }
 
     public void updateAllComboBoxes() {
         // Actualizar el ComboBox de "Environment"
         environmentComboBox.setModel(new DefaultComboBoxModel<>(getFilteredEnvironments()));
+        System.out.println("Updated Environment ComboBox");
 
         // Limpiar y actualizar el ComboBox de "Group"
         groupComboBox.removeAllItems();
         updateGroupComboBox();
+        System.out.println("Updated Group ComboBox");
 
         // Actualizar el ComboBox de "Service List"
         createServiceListComboBox.setModel(new DefaultComboBoxModel<>(getFilteredCreateServiceLists()));
+        System.out.println("Updated Service List ComboBox");
     }
 
     // Actualiza el ComboBox de "Group" basado en el entorno seleccionado
@@ -81,6 +85,7 @@ public class StartRunningPanel extends JPanel {
                 for (File file : files) {
                     String groupName = file.getName().replace(".txt", "");  // Extrae el nombre del grupo sin la extensión
                     groupComboBox.addItem(groupName);  // Agrega los grupos al ComboBox
+                    System.out.println("Added group: " + groupName);
                 }
             }
         }
@@ -94,17 +99,18 @@ public class StartRunningPanel extends JPanel {
                         !name.equals("Environments.txt") &&     // Excluye específicamente Environments.txt
                         name.split("\\.").length == 2           // Asegura que sea solo un nombre de entorno
         );
-        return getFileNamesWithoutExtension(files);  // Extrae solo los nombres de los archivos sin la extensión ".txt"
+        String[] environments = getFileNamesWithoutExtension(files);  // Extrae solo los nombres de los archivos sin la extensión ".txt"
+        System.out.println("Filtered environments: " + String.join(", ", environments));
+        return environments;
     }
-
-
-
 
     // Obtiene las listas de servicios filtradas desde el directorio CreateServiceList
     private String[] getFilteredCreateServiceLists() {
         File folder = new File(BASE_DIR + "CreateServiceList/");
         File[] files = folder.listFiles((dir, name) -> name.endsWith(".txt") && !name.equalsIgnoreCase("List.txt"));
-        return getFileNamesWithoutExtension(files);  // Extrae solo los nombres de los archivos sin la extensión ".txt"
+        String[] serviceLists = getFileNamesWithoutExtension(files);  // Extrae solo los nombres de los archivos sin la extensión ".txt"
+        System.out.println("Filtered service lists: " + String.join(", ", serviceLists));
+        return serviceLists;
     }
 
     // Extrae los nombres de los archivos sin la extensión ".txt"
@@ -113,6 +119,7 @@ public class StartRunningPanel extends JPanel {
         if (files != null) {
             for (File file : files) {
                 fileNames.add(file.getName().replace(".txt", ""));  // Elimina la extensión ".txt"
+                System.out.println("Processed file: " + file.getName());
             }
         }
         return fileNames.toArray(new String[0]);
@@ -125,9 +132,11 @@ public class StartRunningPanel extends JPanel {
             String line;
             while ((line = br.readLine()) != null) {
                 lines.add(line.trim());  // Agrega cada línea del archivo a la lista
+                System.out.println("Read line: " + line.trim());
             }
         } catch (IOException e) {
             showErrorDialog("Error reading file: " + filePath);  // Muestra un error si no se puede leer el archivo
+            System.out.println("Error reading file: " + filePath + " - " + e.getMessage());
         }
         return lines;
     }
@@ -140,6 +149,7 @@ public class StartRunningPanel extends JPanel {
 
         if (selectedEnvironment == null || selectedGroup == null || selectedServiceList == null) {
             showErrorDialog("Please select environment, group, and service list.");  // Muestra un error si no se seleccionan todos los elementos
+            System.out.println("Selection incomplete.");
             return;
         }
 
@@ -149,120 +159,59 @@ public class StartRunningPanel extends JPanel {
 
         if (servers.isEmpty() || services.isEmpty()) {
             showErrorDialog("No servers or services found.");  // Muestra un error si no se encuentran servidores o servicios
+            System.out.println("No servers or services found.");
             return;
         }
 
         // Crear el archivo PowerShell invokeServices.ps1
         String psScriptPath = BASE_DIR + "invokeServices.ps1";
         createPS1Script(psScriptPath, servers, services);  // Crea el script PowerShell
+        System.out.println("Created PowerShell script at: " + psScriptPath);
 
         // Ejecuta el script generado
         if (executeScript(psScriptPath)) {
             JOptionPane.showMessageDialog(this, "Script executed successfully!");  // Muestra un mensaje de éxito
+            System.out.println("Script executed successfully.");
         } else {
             showErrorDialog("Failed to execute the script.");  // Muestra un error si falla la ejecución
+            System.out.println("Failed to execute the script.");
         }
     }
 
     // Crea el archivo PowerShell que invoca los servicios en los servidores
     private void createPS1Script(String psScriptPath, List<String> servers, List<String> services) {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(psScriptPath))) {
-            // Escribimos los parámetros del script
-            writer.write("param(\n");
-            writer.write("    [string[]]$ComputerNames,\n");
-            writer.write("    [string[]]$Services\n");
-            writer.write(")\n\n");
-
-            // Escribimos los servidores en el script
-            writer.write("# Lista de Servidores\n");
-            writer.write("$ComputerNames = @(\n");
-            for (int i = 0; i < servers.size(); i++) {
-                writer.write("    \"" + servers.get(i) + "\"");
-                if (i < servers.size() - 1) {
-                    writer.write(",\n");
-                } else {
-                    writer.write("\n");
+            for (String server : servers) {
+                for (String service : services) {
+                    writer.write(String.format("Invoke-Command -ComputerName %s -FilePath c:\\Scripts\\DiskCollect.ps1 -ArgumentList \"%s\"\n",
+                            server, service));  // Escribe las instrucciones PowerShell para cada servidor y servicio
+                    System.out.println("Writing PowerShell command for server: " + server + " service: " + service);
                 }
             }
-            writer.write(")\n");
-
-            // Escribimos los servicios en el script
-            writer.write("# Lista de Servicios\n");
-            writer.write("$Services = @(\n");
-            for (int i = 0; i < services.size(); i++) {
-                writer.write("    \"" + services.get(i) + "\"");
-                if (i < services.size() - 1) {
-                    writer.write(",\n");
-                } else {
-                    writer.write("\n");
-                }
-            }
-            writer.write(")\n");
-
-            writer.write("\n# Reiniciar los servicios en los servidores\n");
-            writer.write("foreach ($server in $ComputerNames) {\n");
-            writer.write("    try {\n");
-            writer.write("        Write-Host \"Attempting to restart services on server: $server\"\n");
-            writer.write("        Invoke-Command -ComputerName $server -ScriptBlock {\n");
-            writer.write("            param($remoteServices)\n");
-            writer.write("            foreach ($service in $remoteServices) {\n");
-            writer.write("                try {\n");
-            writer.write("                    Write-Host \"Restarting service: $service\"\n");
-            writer.write("                    Restart-Service -Name $service -ErrorAction Stop\n");
-            writer.write("                    Write-Host \"Successfully restarted $service on $env:COMPUTERNAME\"\n");
-            writer.write("                } catch {\n");
-            writer.write("                    Write-Error \"Failed to restart $service on $env:COMPUTERNAME: $_\"\n");
-            writer.write("                }\n");
-            writer.write("            }\n");
-            writer.write("        }\n");
-            writer.write("    } catch {\n");
-
-            writer.write("    }\n");
-            writer.write("}\n");
-
-            writer.flush();  // Asegurarse de que el contenido esté escrito al archivo
         } catch (IOException e) {
-            showErrorDialog("Error creating PowerShell script: " + e.getMessage());  // Muestra un error si no se puede crear el script
+            showErrorDialog("Error creating PowerShell script.");  // Muestra un error si falla la creación del script
+            System.out.println("Error creating PowerShell script: " + e.getMessage());
         }
     }
 
-
+    // Ejecuta el script PowerShell creado y devuelve true si se ejecuta correctamente, false en caso contrario
+    private boolean executeScript(String psScriptPath) {
+        try {
+            ProcessBuilder pb = new ProcessBuilder("powershell.exe", "-ExecutionPolicy", "Unrestricted", "-File", psScriptPath);
+            Process process = pb.start();  // Inicia el proceso PowerShell
+            int exitCode = process.waitFor();  // Espera la finalización del proceso
+            System.out.println("PowerShell script exit code: " + exitCode);
+            return exitCode == 0;  // Devuelve true si la ejecución fue exitosa
+        } catch (Exception e) {
+            showErrorDialog("Error executing PowerShell script.");  // Muestra un error si falla la ejecución
+            System.out.println("Error executing PowerShell script: " + e.getMessage());
+            return false;
+        }
+    }
 
     // Muestra un cuadro de diálogo de error con el mensaje proporcionado
     private void showErrorDialog(String message) {
         JOptionPane.showMessageDialog(this, message, "Error", JOptionPane.ERROR_MESSAGE);
-    }
-
-    // Ejecuta el script PowerShell y devuelve si la ejecución fue exitosa
-    private boolean executeScript(String scriptPath) {
-        String os = System.getProperty("os.name").toLowerCase();
-        if (!os.contains("win")) {
-            showErrorDialog("This tool only works on Windows.");  // Verifica si el sistema operativo es Windows
-            return false;
-        }
-
-        try {
-            // Convertir servidores y servicios en formato de lista para PowerShell
-            List<String> servers = readLinesFromFile(BASE_DIR + "SetupServer/" + groupComboBox.getSelectedItem() + ".txt");
-            List<String> services = readLinesFromFile(BASE_DIR + "CreateServiceList/" + createServiceListComboBox.getSelectedItem() + ".txt");
-
-            String serverList = String.join(",", servers);
-            String serviceList = String.join(",", services);
-
-            // Ejecutar PowerShell
-            ProcessBuilder pb = new ProcessBuilder(
-                    "powershell.exe",
-                    "-ExecutionPolicy", "Bypass",
-                    "-File", scriptPath,
-                    "-ComputerNames", "@(" + serverList + ")",
-                    "-Services", "@(" + serviceList + ")"
-            );
-            pb.inheritIO();
-            return pb.start().waitFor() == 0;
-
-        } catch (IOException | InterruptedException e) {
-            showErrorDialog("Error executing script: " + e.getMessage());  // Muestra un error si no se puede ejecutar el script
-            return false;
-        }
+        System.out.println("Error dialog shown: " + message);
     }
 }

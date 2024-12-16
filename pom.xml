@@ -1,8 +1,1 @@
-<dependencies>
-    <dependency>
-        <groupId>org.swinglabs</groupId>
-        <artifactId>swingx</artifactId>
-        <version>1.6.5</version>
-    </dependency>
-    
-</dependencies>
+

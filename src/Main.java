@@ -19,14 +19,13 @@ public class Main extends JFrame {
         // Configuración principal de la ventana
         setTitle("Server Management");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(800, 500); // Aumentar el tamaño de la ventana para que los paneles tengan más espacio
+        setSize(1000, 600); // Aumentar el tamaño de la ventana para que los paneles tengan más espacio
         setLocationRelativeTo(null); // Centrar ventana
 
         // Crear el directorio de la aplicación
         createAppDirectory();
         createEnvironmentsFile("SetupServer");
         createServiceListFile("CreateServiceList");
-
 
         // Crear un CardLayout para cambiar entre los paneles
         cardLayout = new CardLayout();
@@ -38,9 +37,10 @@ public class Main extends JFrame {
         startRunningPanel = new StartRunningPanel(); // Panel para iniciar servicios en los servidores
         ServiceListPanel serviceListPanel = new ServiceListPanel(); // Panel para crear la lista de servicios
 
-        serverPanel.setPreferredSize(new Dimension(800, 500));
-        startRunningPanel.setPreferredSize(new Dimension(800, 500));
-        serviceListPanel.setPreferredSize(new Dimension(800, 500));
+        // Ajustar el tamaño preferido de los paneles para que se adapten al tamaño de la ventana
+        serverPanel.setPreferredSize(new Dimension(1000, 600));
+        startRunningPanel.setPreferredSize(new Dimension(1000, 600));
+        serviceListPanel.setPreferredSize(new Dimension(1000, 600));
 
         // Añadir los paneles al CardLayout
         mainPanel.add(buttonPanel, "Home");
@@ -84,7 +84,6 @@ public class Main extends JFrame {
                 startRunningPanel.updateAllComboBoxes();  // Esto actualizará los ComboBoxes con los datos más recientes
             }
         });
-
     }
 
     // Método para crear la carpeta "StartServices" en la carpeta de Documentos del usuario

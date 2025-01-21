@@ -1,5 +1,7 @@
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -20,6 +22,9 @@ public class ServerPanel extends JPanel {
     private JPanel mainPanel; // Main panel
     private GroupServerPanel groupServerPanel; // Panel for groups and servers
 
+    private static final int SMALL_SCREEN_WIDTH = 800;
+    private static final int SMALL_SCREEN_HEIGHT = 600;
+
     public ServerPanel(CardLayout cardLayout, JPanel mainPanel) {
         this.cardLayout = cardLayout;
         this.mainPanel = mainPanel;
@@ -28,9 +33,19 @@ public class ServerPanel extends JPanel {
         groupServerPanel = new GroupServerPanel();
 
         environmentTextField = new JTextField(15);
+        environmentTextField.setFont(new Font("Arial", Font.PLAIN, 18)); // Agrandar el texto
+
         createEnvironmentButton = new JButton("Create Environment");
+        createEnvironmentButton.setFont(new Font("Arial", Font.PLAIN, 18)); // Agrandar texto
+        createEnvironmentButton.setPreferredSize(new Dimension(250, 50)); // Tamaño personalizado para el botón
+
         deleteEnvironmentButton = new JButton("Delete Environment");
+        deleteEnvironmentButton.setFont(new Font("Arial", Font.PLAIN, 18)); // Agrandar texto
+        deleteEnvironmentButton.setPreferredSize(new Dimension(250, 50)); // Tamaño personalizado para el botón
+
         environmentComboBox = new JComboBox<>();
+        environmentComboBox.setFont(new Font("Arial", Font.PLAIN, 18)); // Agrandar texto
+        environmentComboBox.setPreferredSize(new Dimension(250, 40)); // Tamaño personalizado para el ComboBox
 
         for (String env : environments) {
             environmentComboBox.addItem(env);
@@ -39,7 +54,7 @@ public class ServerPanel extends JPanel {
         JPanel inputPanel = new JPanel();
         inputPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 10, 10));
 
-        // Add components in the desired order
+        // Añadir componentes en el orden deseado
         inputPanel.add(environmentTextField);
         inputPanel.add(createEnvironmentButton);
         inputPanel.add(environmentComboBox);
@@ -55,11 +70,60 @@ public class ServerPanel extends JPanel {
         });
 
         switchPanelButton = new JButton("Switch to Group and Server Panel");
+        switchPanelButton.setFont(new Font("Arial", Font.PLAIN, 18)); // Agrandar texto
+        switchPanelButton.setPreferredSize(new Dimension(300, 50)); // Tamaño personalizado para el botón
         switchPanelButton.addActionListener(e -> switchToGroupServerPanel());
 
         setLayout(new BorderLayout());
         add(inputPanel, BorderLayout.CENTER);
         add(switchPanelButton, BorderLayout.SOUTH);
+
+        // Detectar cambios en el tamaño de la ventana
+        addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+                adjustComponentSizes(getWidth(), getHeight());
+            }
+        });
+
+        // Ajustar el tamaño inicial de los componentes
+        adjustComponentSizes(getWidth(), getHeight());
+    }
+
+    private void adjustComponentSizes(int width, int height) {
+        if (width < SMALL_SCREEN_WIDTH || height < SMALL_SCREEN_HEIGHT) {
+            // Pantallas pequeñas: Reducir el tamaño de los botones y el texto
+            environmentTextField.setFont(new Font("Arial", Font.PLAIN, 14));
+            environmentTextField.setPreferredSize(new Dimension(200, 35));
+
+            createEnvironmentButton.setFont(new Font("Arial", Font.PLAIN, 14));
+            createEnvironmentButton.setPreferredSize(new Dimension(200, 40));
+
+            deleteEnvironmentButton.setFont(new Font("Arial", Font.PLAIN, 14));
+            deleteEnvironmentButton.setPreferredSize(new Dimension(200, 40));
+
+            environmentComboBox.setFont(new Font("Arial", Font.PLAIN, 14));
+            environmentComboBox.setPreferredSize(new Dimension(200, 35));
+
+            switchPanelButton.setFont(new Font("Arial", Font.PLAIN, 14));
+            switchPanelButton.setPreferredSize(new Dimension(250, 40));
+        } else {
+            // Pantallas grandes: Mantener el tamaño más grande
+            environmentTextField.setFont(new Font("Arial", Font.PLAIN, 18));
+            environmentTextField.setPreferredSize(new Dimension(250, 50));
+
+            createEnvironmentButton.setFont(new Font("Arial", Font.PLAIN, 18));
+            createEnvironmentButton.setPreferredSize(new Dimension(250, 50));
+
+            deleteEnvironmentButton.setFont(new Font("Arial", Font.PLAIN, 18));
+            deleteEnvironmentButton.setPreferredSize(new Dimension(250, 50));
+
+            environmentComboBox.setFont(new Font("Arial", Font.PLAIN, 18));
+            environmentComboBox.setPreferredSize(new Dimension(250, 40));
+
+            switchPanelButton.setFont(new Font("Arial", Font.PLAIN, 18));
+            switchPanelButton.setPreferredSize(new Dimension(300, 50));
+        }
     }
 
     private static String getEnvironmentFilePath() {
@@ -122,7 +186,6 @@ public class ServerPanel extends JPanel {
         showSuccessDialog("Environment created successfully.");
     }
 
-
     private void deleteEnvironment() {
         String selectedEnvironment = (String) environmentComboBox.getSelectedItem();
         if (selectedEnvironment == null) {
@@ -154,10 +217,6 @@ public class ServerPanel extends JPanel {
         } catch (IOException e) {
             showErrorDialog("Error saving environments to file: " + e.getMessage());
         }
-    }
-
-    private boolean isValidEnvironmentName(String name) {
-        return name.matches("^[a-zA-Z0-9_]+$");
     }
 
     private void saveEnvironmentToFile(String environmentName) {

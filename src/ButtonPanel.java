@@ -1,5 +1,7 @@
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 
 public class ButtonPanel extends JPanel {
     public JButton setupServerButton;
@@ -25,10 +27,7 @@ public class ButtonPanel extends JPanel {
         JButton[] buttons = {setupServerButton, createServiceListButton, startRunningButton};
         for (JButton button : buttons) {
             button.setForeground(Color.BLACK);
-            button.setFont(new Font("Arial", Font.BOLD, 14)); // Set a readable font size
-            button.setPreferredSize(new Dimension(200, 40)); // Set a preferred size
-            button.setMinimumSize(new Dimension(200, 40)); // Minimum size to ensure text fits
-            button.setMaximumSize(new Dimension(200, 40)); // Maximum size to prevent overflow
+            button.setFont(new Font("Arial", Font.BOLD, 18)); // Set a larger font size
         }
 
         // Add buttons to the panel
@@ -37,5 +36,28 @@ public class ButtonPanel extends JPanel {
             gbc.gridy++;
         }
 
+        // Redimensionar los botones cuando la ventana cambie de tamaño
+        addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+                adjustButtonSize(getWidth());
+            }
+        });
+    }
+
+    // Método para ajustar el tamaño de los botones en función del ancho de la ventana
+    private void adjustButtonSize(int panelWidth) {
+        int newButtonWidth = (panelWidth - 40) / 3; // Hacer que los botones sean más grandes en función del ancho
+        newButtonWidth = Math.max(newButtonWidth, 250); // Asegurarse de que los botones tengan un tamaño mínimo
+
+        Dimension newSize = new Dimension(newButtonWidth, 60); // Ajustar el alto de los botones
+
+        setupServerButton.setPreferredSize(newSize);
+        createServiceListButton.setPreferredSize(newSize);
+        startRunningButton.setPreferredSize(newSize);
+
+        // Volver a organizar el panel para aplicar los nuevos tamaños
+        revalidate();
+        repaint();
     }
 }

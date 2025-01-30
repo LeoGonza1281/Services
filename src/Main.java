@@ -14,85 +14,72 @@ public class Main extends JFrame {
     private StartRunningPanel startRunningPanel;
     private ServerPanel serverPanel;
     private File appDirectory; // Directorio donde se guardarán los archivos
+    private EmailPanel emailPanel;
+    private ManageReportsPanel manageReportsPanel;
+
 
     public Main() {
-        // Configuración principal de la ventana
         setTitle("Server Management");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(1000, 600); // Aumentar el tamaño de la ventana para que los paneles tengan más espacio
-        setLocationRelativeTo(null); // Centrar ventana
+        setSize(1000, 600);
+        setLocationRelativeTo(null);
 
-        // Crear el directorio de la aplicación
         createAppDirectory();
         createEnvironmentsFile("SetupServer");
         createServiceListFile("CreateServiceList");
 
-        // Crear un CardLayout para cambiar entre los paneles
         cardLayout = new CardLayout();
         mainPanel = new JPanel(cardLayout);
 
-        // Crear los paneles individuales
-        ButtonPanel buttonPanel = new ButtonPanel(); // Panel principal con los botones
-        serverPanel = new ServerPanel(cardLayout, mainPanel); // Pasar cardLayout y mainPanel al ServerPanel
-        startRunningPanel = new StartRunningPanel(); // Panel para iniciar servicios en los servidores
-        ServiceListPanel serviceListPanel = new ServiceListPanel(); // Panel para crear la lista de servicios
+        ButtonPanel buttonPanel = new ButtonPanel();
+        serverPanel = new ServerPanel(cardLayout, mainPanel);
+        startRunningPanel = new StartRunningPanel();
+        ServiceListPanel serviceListPanel = new ServiceListPanel();
+        emailPanel = new EmailPanel();
+        manageReportsPanel = new ManageReportsPanel(); // Panel de Manage Reports
 
-        // Ajustar el tamaño preferido de los paneles para que se adapten al tamaño de la ventana
         serverPanel.setPreferredSize(new Dimension(1000, 600));
         startRunningPanel.setPreferredSize(new Dimension(1000, 600));
         serviceListPanel.setPreferredSize(new Dimension(1000, 600));
+        emailPanel.setPreferredSize(new Dimension(1000, 600));
+        manageReportsPanel.setPreferredSize(new Dimension(1000, 600)); // Tamaño del panel
 
-        // Añadir los paneles al CardLayout
         mainPanel.add(buttonPanel, "Home");
         mainPanel.add(serverPanel, "Setup Server");
         mainPanel.add(serviceListPanel, "Create ServiceList");
         mainPanel.add(startRunningPanel, "Start Running");
+        mainPanel.add(emailPanel, "Email");
+        mainPanel.add(manageReportsPanel, "Manage Reports"); // Agregar el nuevo panel
 
-        // Añadir el panel principal al JFrame
         add(mainPanel, BorderLayout.CENTER);
 
-        // Crear la barra de navegación
         createNavbar();
 
-        // Mostrar el panel principal (Home) al inicio
         cardLayout.show(mainPanel, "Home");
 
-        // Configurar las acciones de los botones en el ButtonPanel para cambiar entre paneles
-        buttonPanel.setupServerButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                cardLayout.show(mainPanel, "Setup Server");
-                createEnvironmentsFile("SetupServer"); // Crear el archivo en la nueva carpeta
-            }
+        buttonPanel.setupServerButton.addActionListener(e -> {
+            cardLayout.show(mainPanel, "Setup Server");
+            createEnvironmentsFile("SetupServer");
         });
 
-        buttonPanel.createServiceListButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                cardLayout.show(mainPanel, "Create ServiceList");
-                createServiceListFile("CreateServiceList"); // Crear el archivo en la nueva carpeta
-            }
+        buttonPanel.createServiceListButton.addActionListener(e -> {
+            cardLayout.show(mainPanel, "Create ServiceList");
+            createServiceListFile("Create ServiceList");
         });
 
-        buttonPanel.startRunningButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                // Cambiar al panel "Start Running"
-                cardLayout.show(mainPanel, "Start Running");
-
-                // Actualizar los ComboBoxes en el panel "Start Running"
-                startRunningPanel.updateAllComboBoxes();  // Esto actualizará los ComboBoxes con los datos más recientes
-            }
+        buttonPanel.startRunningButton.addActionListener(e -> {
+            cardLayout.show(mainPanel, "Start Running");
+            startRunningPanel.updateAllComboBoxes();
         });
+
+        // Acción del botón "Manage Reports"
+        buttonPanel.manageReportButton.addActionListener(e -> cardLayout.show(mainPanel, "Manage Reports"));
     }
 
-    // Método para crear la carpeta "StartServices" en la carpeta de Documentos del usuario
+
     private void createAppDirectory() {
-        // Obtener el directorio de documentos del usuario
         String userHome = System.getProperty("user.home");
         File documentsDir = new File(userHome, "Documents");
-
-        // Crear la carpeta StartServices en Documentos
         appDirectory = new File(documentsDir, "StartServices");
         if (!appDirectory.exists()) {
             if (appDirectory.mkdir()) {
@@ -101,13 +88,10 @@ public class Main extends JFrame {
                 System.err.println("No se pudo crear el directorio 'StartServices'.");
             }
         }
-        // Imprimir un mensaje indicando que el directorio ya existe o se ha creado
         System.out.println("El directorio 'StartServices' está disponible en: " + appDirectory.getAbsolutePath());
     }
 
-    // Método para crear el archivo de texto de entornos solo si no existe
     private void createEnvironmentsFile(String folderName) {
-        // Crear una carpeta específica dentro de StartServices
         File folder = new File(appDirectory, folderName);
         if (!folder.exists()) {
             if (folder.mkdir()) {
@@ -129,9 +113,7 @@ public class Main extends JFrame {
         }
     }
 
-    // Método para crear el archivo List.txt solo si no existe
     private void createServiceListFile(String folderName) {
-        // Crear una carpeta específica dentro de StartServices
         File folder = new File(appDirectory, folderName);
         if (!folder.exists()) {
             if (folder.mkdir()) {
@@ -153,56 +135,58 @@ public class Main extends JFrame {
         }
     }
 
-    // Crear la barra de navegación (navbar)
     private void createNavbar() {
-        JPanel navbar = new JPanel(new FlowLayout(FlowLayout.LEFT)); // Alinear la navbar a la izquierda
-        navbar.setBackground(Color.decode("#830051")); // Color de fondo púrpura
+        JPanel navbar = new JPanel(new BorderLayout());
+        navbar.setBackground(Color.decode("#830051"));
 
-        // Botón para volver a la página principal
-        JButton homeButton = new JButton("Home");
-        homeButton.setForeground(Color.WHITE); // Texto en blanco
-        homeButton.setBackground(Color.decode("#830051")); // Fondo púrpura
-        homeButton.setBorderPainted(false); // Sin borde
-        homeButton.setFocusPainted(false); // Sin borde de enfoque
+        JPanel leftPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        leftPanel.setOpaque(false);
 
-        // Efecto hover para el botón "Home"
-        homeButton.addMouseListener(new java.awt.event.MouseAdapter() {
+        JButton homeButton = createNavButton("Home");
+        homeButton.addActionListener(e -> cardLayout.show(mainPanel, "Home"));
+        leftPanel.add(homeButton);
+
+        JPanel rightPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        rightPanel.setOpaque(false);
+
+        JButton emailButton = createNavButton("Email");
+        emailButton.addActionListener(e -> cardLayout.show(mainPanel, "Email"));
+        rightPanel.add(emailButton);
+
+        navbar.add(leftPanel, BorderLayout.WEST);
+        navbar.add(rightPanel, BorderLayout.EAST);
+
+        add(navbar, BorderLayout.NORTH);
+    }
+
+    private JButton createNavButton(String text) {
+        JButton button = new JButton(text);
+        button.setForeground(Color.WHITE);
+        button.setBackground(Color.decode("#830051"));
+        button.setBorderPainted(false);
+        button.setFocusPainted(false);
+
+        button.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseEntered(java.awt.event.MouseEvent e) {
-                homeButton.setBackground(Color.decode("#a03b7e"));
-                homeButton.setForeground(Color.decode("#e0e0e0"));
+                button.setBackground(Color.decode("#a03b7e"));
+                button.setForeground(Color.decode("#e0e0e0"));
             }
 
             @Override
             public void mouseExited(java.awt.event.MouseEvent e) {
-                homeButton.setBackground(Color.decode("#830051"));
-                homeButton.setForeground(Color.WHITE);
+                button.setBackground(Color.decode("#830051"));
+                button.setForeground(Color.WHITE);
             }
         });
 
-        // Acción para volver al panel Home al presionar el botón
-        homeButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                cardLayout.show(mainPanel, "Home");
-            }
-        });
-
-        // Añadir el botón Home a la barra de navegación
-        navbar.add(homeButton);
-
-        // Añadir la barra de navegación al JFrame en la parte superior
-        add(navbar, BorderLayout.NORTH);
+        return button;
     }
 
-    // Método principal para ejecutar la aplicación
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                Main app = new Main();
-                app.setVisible(true); // Mostrar la ventana
-            }
+        SwingUtilities.invokeLater(() -> {
+            Main app = new Main();
+            app.setVisible(true);
         });
     }
 }

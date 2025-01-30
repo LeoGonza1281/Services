@@ -13,46 +13,37 @@ public class ServiceListPanel extends JPanel {
     private JComboBox<String> listDropdown;
     private List<String> createdLists;
 
-    // Base directory for storing files
     private static final String BASE_DIR = System.getProperty("user.home") + "/Documents/StartServices/CreateServiceList/";
 
     public ServiceListPanel() {
-        setLayout(new BorderLayout(10, 10)); // Add spacing between components
+        setLayout(new BorderLayout(10, 10));
 
-        // Initialize the list of created files
         createdLists = new ArrayList<>();
-        new File(BASE_DIR).mkdirs(); // Create base directory if it doesn't exist
+        new File(BASE_DIR).mkdirs();
 
-        // Top Panel with controls
-        JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 10)); // Add spacing between components
+        JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 10));
 
-        // Search field
         searchField = new JTextField(20);
         searchField.setFont(new Font("SansSerif", Font.PLAIN, 14));
         searchField.addActionListener(e -> filterServices());
 
-        // Create New List button
         createListButton = new JButton("Create New List");
         createListButton.setFont(new Font("SansSerif", Font.BOLD, 14));
         createListButton.addActionListener(e -> createNewList());
 
-        // Dropdown for selecting lists
         listDropdown = new JComboBox<>();
         listDropdown.setFont(new Font("SansSerif", Font.PLAIN, 14));
         listDropdown.addItem("Select a list");
-        loadCreatedLists(); // Load existing lists from List.txt
+        loadCreatedLists();
 
-        // Edit List button
         editListButton = new JButton("Edit List");
         editListButton.setFont(new Font("SansSerif", Font.BOLD, 14));
         editListButton.addActionListener(e -> editSelectedList());
 
-        // Delete List button
         deleteListButton = new JButton("Delete List");
         deleteListButton.setFont(new Font("SansSerif", Font.BOLD, 14));
         deleteListButton.addActionListener(e -> deleteSelectedList());
 
-        // Add components to the top panel in desired order
         topPanel.add(new JLabel("Search:"));
         topPanel.add(searchField);
         topPanel.add(createListButton);
@@ -62,9 +53,8 @@ public class ServiceListPanel extends JPanel {
 
         add(topPanel, BorderLayout.NORTH);
 
-        // Service list initialization
         serviceModel = new DefaultListModel<>();
-        List<String> services = ServiceFetcher.fetchServices(); // Assume fetchServices is correctly implemented
+        List<String> services = ServiceFetcher.fetchServices();
         services.forEach(serviceModel::addElement);
 
         servicesList = new JList<>(serviceModel);
@@ -72,19 +62,16 @@ public class ServiceListPanel extends JPanel {
         servicesList.setFont(new Font("SansSerif", Font.PLAIN, 14));
         add(new JScrollPane(servicesList), BorderLayout.CENTER);
 
-        // Button to add selected services
         addButton = new JButton("Add to ServiceList");
         addButton.setFont(new Font("SansSerif", Font.BOLD, 14));
         addButton.addActionListener(e -> addSelectedServices());
         add(addButton, BorderLayout.SOUTH);
 
-        // Text area for displaying selected services
         selectedServicesArea = new JTextArea(10, 30);
         selectedServicesArea.setFont(new Font("Monospaced", Font.PLAIN, 14));
         selectedServicesArea.setEditable(false);
         add(new JScrollPane(selectedServicesArea), BorderLayout.EAST);
 
-        // Dropdown action listener for list selection
         listDropdown.addActionListener(e -> {
             String selectedItem = (String) listDropdown.getSelectedItem();
             if (selectedItem != null && !selectedItem.equals("Select a list")) {
@@ -94,11 +81,50 @@ public class ServiceListPanel extends JPanel {
             }
         });
 
-        // Set preferred size for better visibility
         setPreferredSize(new Dimension(800, 600));
+
+        // Add component listener to handle resizing
+        addComponentListener(new java.awt.event.ComponentAdapter() {
+            @Override
+            public void componentResized(java.awt.event.ComponentEvent evt) {
+                adjustFontSizes();
+            }
+        });
     }
 
-    // Filters services based on search text
+    private void adjustFontSizes() {
+        int width = getWidth();
+        int height = getHeight();
+
+        // Determina si el panel está en pantalla completa
+        boolean isFullScreen = (width >= Toolkit.getDefaultToolkit().getScreenSize().width)
+                && (height >= Toolkit.getDefaultToolkit().getScreenSize().height);
+
+        // Define el tamaño base según si está en pantalla completa
+        int baseSize = isFullScreen ? Math.min(width, height) / 50 : Math.min(width, height) / 30;
+
+        Font font = new Font("SansSerif", Font.PLAIN, baseSize);
+        searchField.setFont(font);
+        createListButton.setFont(font.deriveFont(Font.BOLD));
+        listDropdown.setFont(font);
+        editListButton.setFont(font.deriveFont(Font.BOLD));
+        deleteListButton.setFont(font.deriveFont(Font.BOLD));
+        addButton.setFont(font.deriveFont(Font.BOLD));
+        selectedServicesArea.setFont(new Font("Monospaced", Font.PLAIN, baseSize));
+
+        // Ajusta el tamaño de fuente para los elementos del JList
+        servicesList.setCellRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+                Component renderer = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                renderer.setFont(new Font("SansSerif", Font.BOLD, baseSize)); // Ajusta el tamaño de la fuente aquí
+                return renderer;
+            }
+        });
+    }
+
+
+
     private void filterServices() {
         String searchText = searchField.getText().toLowerCase();
         DefaultListModel<String> filteredModel = new DefaultListModel<>();
@@ -111,7 +137,6 @@ public class ServiceListPanel extends JPanel {
         servicesList.setModel(filteredModel);
     }
 
-    // Adds selected services to the chosen list
     private void addSelectedServices() {
         List<String> selectedServices = servicesList.getSelectedValuesList();
         if (selectedServices.isEmpty()) {
@@ -125,17 +150,14 @@ public class ServiceListPanel extends JPanel {
             return;
         }
 
-        // Add services to the file
         for (String service : selectedServices) {
             appendServiceToFile(service, selectedList);
         }
 
-        // Reload the text area view
         loadSelectedListServices(selectedList);
         JOptionPane.showMessageDialog(this, "Services added to " + selectedList);
     }
 
-    // Appends a service to the selected list file
     private void appendServiceToFile(String serviceName, String selectedList) {
         String fileName = BASE_DIR + selectedList + ".txt";
         try (FileWriter writer = new FileWriter(fileName, true)) {
@@ -145,7 +167,6 @@ public class ServiceListPanel extends JPanel {
         }
     }
 
-    // Creates a new list
     private void createNewList() {
         String listName = JOptionPane.showInputDialog(this, "Enter list name:");
         if (listName != null && !listName.trim().isEmpty() && !createdLists.contains(listName.trim())) {
@@ -160,7 +181,6 @@ public class ServiceListPanel extends JPanel {
         }
     }
 
-    // Adds a new list name to List.txt
     private void writeListNameToFile(String listName) {
         try (FileWriter writer = new FileWriter(BASE_DIR + "List.txt", true)) {
             writer.write(listName + "\n");
@@ -169,7 +189,6 @@ public class ServiceListPanel extends JPanel {
         }
     }
 
-    // Creates a new list file
     private void createNewFile(String listName) {
         try (FileWriter writer = new FileWriter(BASE_DIR + listName + ".txt")) {
             // Empty file creation
@@ -178,7 +197,6 @@ public class ServiceListPanel extends JPanel {
         }
     }
 
-    // Loads created lists into dropdown
     private void loadCreatedLists() {
         try (BufferedReader reader = new BufferedReader(new FileReader(BASE_DIR + "List.txt"))) {
             String line;
@@ -191,7 +209,6 @@ public class ServiceListPanel extends JPanel {
         }
     }
 
-    // Loads services from the selected list file
     private void loadSelectedListServices(String listName) {
         selectedServicesArea.setText("");
         try (BufferedReader reader = new BufferedReader(new FileReader(BASE_DIR + listName + ".txt"))) {
@@ -206,10 +223,83 @@ public class ServiceListPanel extends JPanel {
 
     // Edits the selected list
     private void editSelectedList() {
-        // Existing implementation remains unchanged
+        String selectedList = (String) listDropdown.getSelectedItem();
+        if (selectedList == null || selectedList.equals("Select a list")) {
+            JOptionPane.showMessageDialog(this, "Please select a valid list to edit.");
+            return;
+        }
+
+        // Load services from the selected list
+        List<String> services = new ArrayList<>();
+        String fileName = BASE_DIR + selectedList + ".txt";
+        try (BufferedReader reader = new BufferedReader(new FileReader(fileName))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                services.add(line);
+            }
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(this, "Error reading the list file: " + e.getMessage());
+            return;
+        }
+
+        // Create a panel with checkboxes for each service
+        JPanel checkboxPanel = new JPanel();
+        checkboxPanel.setLayout(new BoxLayout(checkboxPanel, BoxLayout.Y_AXIS));
+        List<JCheckBox> checkBoxes = new ArrayList<>();
+        for (String service : services) {
+            JCheckBox checkBox = new JCheckBox(service);
+            checkBox.setFont(new Font("SansSerif", Font.PLAIN, 14));
+            checkBoxes.add(checkBox);
+            checkboxPanel.add(checkBox);
+        }
+
+        // Show the checkboxes in a scrollable dialog
+        int option = JOptionPane.showConfirmDialog(this, new JScrollPane(checkboxPanel),
+                "Select services to edit or delete", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+
+        if (option == JOptionPane.OK_OPTION) {
+            List<String> selectedServices = new ArrayList<>();
+            for (JCheckBox checkBox : checkBoxes) {
+                if (checkBox.isSelected()) {
+                    selectedServices.add(checkBox.getText());
+                }
+            }
+
+            if (!selectedServices.isEmpty()) {
+                int action = JOptionPane.showOptionDialog(this, "What would you like to do with the selected services?",
+                        "Edit or Delete Services", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE,
+                        null, new String[]{"Edit", "Delete", "Cancel"}, "Cancel");
+
+                if (action == 0) { // Edit
+                    for (String service : selectedServices) {
+                        String newService = JOptionPane.showInputDialog(this, "Edit service:", service);
+                        if (newService != null && !newService.trim().isEmpty()) {
+                            services.set(services.indexOf(service), newService.trim());
+                        }
+                    }
+                } else if (action == 1) { // Delete
+                    services.removeAll(selectedServices);
+                }
+
+                // Write updated services back to the file
+                try (FileWriter writer = new FileWriter(fileName)) {
+                    for (String service : services) {
+                        writer.write(service + "\n");
+                    }
+                    JOptionPane.showMessageDialog(this, "Changes saved to " + selectedList);
+                } catch (IOException e) {
+                    JOptionPane.showMessageDialog(this, "Error saving changes: " + e.getMessage());
+                }
+
+                // Reload the updated services in the text area
+                loadSelectedListServices(selectedList);
+            } else {
+                JOptionPane.showMessageDialog(this, "No services selected.");
+            }
+        }
     }
 
-    // Deletes the selected list
+
     private void deleteSelectedList() {
         String selectedList = (String) listDropdown.getSelectedItem();
         if (!selectedList.equals("Select a list")) {

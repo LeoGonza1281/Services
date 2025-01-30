@@ -7,6 +7,7 @@ public class ButtonPanel extends JPanel {
     public JButton setupServerButton;
     public JButton createServiceListButton;
     public JButton startRunningButton;
+    public JButton manageReportButton;
 
     public ButtonPanel() {
         // Use GridBagLayout for flexible layout
@@ -15,19 +16,20 @@ public class ButtonPanel extends JPanel {
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.insets = new Insets(10, 10, 10, 10);
-        gbc.fill = GridBagConstraints.HORIZONTAL; // Make buttons fill horizontally
+        gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.anchor = GridBagConstraints.CENTER;
 
-        // Initialize buttons with text
+        // Initialize buttons with tex t
         setupServerButton = new JButton("Setup Server");
         createServiceListButton = new JButton("Create ServiceList");
         startRunningButton = new JButton("Start Running");
+        manageReportButton = new JButton("Manage Reports");
 
         // Set consistent button properties
-        JButton[] buttons = {setupServerButton, createServiceListButton, startRunningButton};
+        JButton[] buttons = {setupServerButton, createServiceListButton, startRunningButton, manageReportButton};
         for (JButton button : buttons) {
             button.setForeground(Color.BLACK);
-            button.setFont(new Font("Arial", Font.BOLD, 18)); // Set a larger font size
+            button.setFont(new Font("Arial", Font.BOLD, 18));
         }
 
         // Add buttons to the panel
@@ -36,7 +38,7 @@ public class ButtonPanel extends JPanel {
             gbc.gridy++;
         }
 
-        // Redimensionar los botones cuando la ventana cambie de tamaño
+        // Resize buttons when the window is resized
         addComponentListener(new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent e) {
@@ -45,18 +47,19 @@ public class ButtonPanel extends JPanel {
         });
     }
 
-    // Método para ajustar el tamaño de los botones en función del ancho de la ventana
+    // Method to adjust button size based on panel width
     private void adjustButtonSize(int panelWidth) {
-        int newButtonWidth = (panelWidth - 40) / 3; // Hacer que los botones sean más grandes en función del ancho
-        newButtonWidth = Math.max(newButtonWidth, 250); // Asegurarse de que los botones tengan un tamaño mínimo
+        int newButtonWidth = (panelWidth - 40) / 3;
+        newButtonWidth = Math.max(newButtonWidth, 250);
 
-        Dimension newSize = new Dimension(newButtonWidth, 60); // Ajustar el alto de los botones
+        Dimension newSize = new Dimension(newButtonWidth, 60);
 
         setupServerButton.setPreferredSize(newSize);
         createServiceListButton.setPreferredSize(newSize);
         startRunningButton.setPreferredSize(newSize);
+        manageReportButton.setPreferredSize(newSize);
 
-        // Volver a organizar el panel para aplicar los nuevos tamaños
+        // Rearrange the panel to apply new sizes
         revalidate();
         repaint();
     }

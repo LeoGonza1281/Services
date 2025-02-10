@@ -71,8 +71,12 @@ public class Main extends JFrame {
         });
 
         // Acción del botón "Manage Reports"
-        buttonPanel.manageReportButton.addActionListener(e -> cardLayout.show(mainPanel, "Manage Reports"));
+        buttonPanel.manageReportButton.addActionListener(e -> {
+            cardLayout.show(mainPanel, "Manage Reports");
+            manageReportsPanel.updateAllComboboxes();
+        });
     }
+
 
 
     private void createAppDirectory() {

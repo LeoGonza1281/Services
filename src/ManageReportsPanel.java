@@ -5,56 +5,64 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ManageReportsPanel extends JPanel {
-    private JTextField reportNameTextField;    // Campo de texto para ingresar el nombre del reporte
-    private JComboBox<String> serviceComboBox; // ComboBox para seleccionar el servicio
-    private JComboBox<String> groupComboBox;  // ComboBox para seleccionar el grupo
-    private JButton generateReportButton;      // Botón para generar el reporte
+    private JTextField reportNameTextField;
+    private JComboBox<String> serviceComboBox;
+    private JComboBox<String> groupComboBox;
+    private JButton generateReportButton;
+    private JButton viewReportButton;
     private static final String BASE_DIR = System.getProperty("user.home") + "/Documents/StartServices/";
+    private static final String REPORTS_DIR = BASE_DIR + "CreateReports/";
 
     public ManageReportsPanel() {
         setLayout(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(20, 20, 20, 20); // Aumentar espaciado
+        gbc.insets = new Insets(20, 20, 20, 20);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        // Fuente grande para los componentes
         Font largeFont = new Font("Arial", Font.BOLD, 16);
 
-        // Panel para ingresar el nombre del reporte
         JLabel reportNameLabel = new JLabel("Report Name:");
         reportNameLabel.setFont(largeFont);
         reportNameTextField = new JTextField();
         reportNameTextField.setFont(largeFont);
-        reportNameTextField.setPreferredSize(new Dimension(400, 50)); // Tamaño más grande
+        reportNameTextField.setPreferredSize(new Dimension(400, 50));
         addComponent(reportNameLabel, gbc, 0, 0);
         addComponent(reportNameTextField, gbc, 1, 0);
 
-        // Panel de Selección de "Service"
-        JLabel serviceLabel = new JLabel("Select Services List:");
+        JLabel serviceLabel = new JLabel("Select Service:");
         serviceLabel.setFont(largeFont);
         serviceComboBox = new JComboBox<>(getFilteredServices());
         serviceComboBox.setFont(largeFont);
-        serviceComboBox.setPreferredSize(new Dimension(400, 50)); // Tamaño más grande
+        serviceComboBox.setPreferredSize(new Dimension(400, 50));
         addComponent(serviceLabel, gbc, 0, 1);
         addComponent(serviceComboBox, gbc, 1, 1);
 
-        // Panel de Selección de "Group"
         JLabel groupLabel = new JLabel("Select Group:");
         groupLabel.setFont(largeFont);
         groupComboBox = new JComboBox<>(getFilteredGroups());
         groupComboBox.setFont(largeFont);
-        groupComboBox.setPreferredSize(new Dimension(400, 50)); // Tamaño más grande
+        groupComboBox.setPreferredSize(new Dimension(400, 50));
         addComponent(groupLabel, gbc, 0, 2);
         addComponent(groupComboBox, gbc, 1, 2);
 
-        // Botón para generar el reporte
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 0));
         generateReportButton = new JButton("Generate Report");
         generateReportButton.setFont(largeFont);
-        generateReportButton.setPreferredSize(new Dimension(200, 50)); // Tamaño más grande
+        generateReportButton.setPreferredSize(new Dimension(200, 50));
         generateReportButton.addActionListener(e -> generateReport());
-        gbc.gridx = 1;
+
+        viewReportButton = new JButton("View Reports");
+        viewReportButton.setFont(largeFont);
+        viewReportButton.setPreferredSize(new Dimension(200, 50));
+        viewReportButton.addActionListener(e -> viewReports());
+
+        buttonPanel.add(generateReportButton);
+        buttonPanel.add(viewReportButton);
+
+        gbc.gridx = 0;
         gbc.gridy = 3;
-        add(generateReportButton, gbc);
+        gbc.gridwidth = 2;
+        add(buttonPanel, gbc);
     }
 
     private void addComponent(Component comp, GridBagConstraints gbc, int x, int y) {
@@ -62,6 +70,11 @@ public class ManageReportsPanel extends JPanel {
         gbc.gridy = y;
         add(comp, gbc);
     }
+    public void updateAllComboboxes() {
+        serviceComboBox.setModel(new DefaultComboBoxModel<>(getFilteredServices()));
+        groupComboBox.setModel(new DefaultComboBoxModel<>(getFilteredGroups()));
+    }
+
 
     private String[] getFilteredServices() {
         File folder = new File(BASE_DIR + "CreateServiceList/");
@@ -95,42 +108,31 @@ public class ManageReportsPanel extends JPanel {
             return;
         }
 
-        String groupFilePath = BASE_DIR + "SetupServer/" + selectedGroup + ".txt";
-        List<String> servers = readLinesFromFile(groupFilePath);
-
-        if (servers.isEmpty()) {
-            showErrorDialog("No servers found.");
-            return;
+        File reportDir = new File(REPORTS_DIR);
+        if (!reportDir.exists()) {
+            reportDir.mkdirs();
         }
 
-        String reportPath = BASE_DIR + "reports/" + reportName + "_Report.txt";
-        createReport(reportPath, servers, selectedService);
+        String reportFilePath = REPORTS_DIR + reportName + "_Report.txt";
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(reportFilePath))) {
+            writer.write(selectedService + "\n");
+            writer.write( selectedGroup + "\n");
+        } catch (IOException e) {
+            showErrorDialog("Error writing report file: " + e.getMessage());
+        }
         JOptionPane.showMessageDialog(this, "Report generated successfully!");
     }
 
-    private List<String> readLinesFromFile(String filePath) {
-        List<String> lines = new ArrayList<>();
-        try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
-            String line;
-            while ((line = br.readLine()) != null) {
-                lines.add(line.trim());
+    private void viewReports() {
+        try {
+            File reportsDir = new File(REPORTS_DIR);
+            if (!reportsDir.exists() || reportsDir.listFiles().length == 0) {
+                showErrorDialog("No reports available.");
+                return;
             }
+            Desktop.getDesktop().open(reportsDir);
         } catch (IOException e) {
-            showErrorDialog("Error reading file: " + filePath);
-        }
-        return lines;
-    }
-
-    private void createReport(String reportPath, List<String> servers, String service) {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(reportPath))) {
-            writer.write("Report for Service: " + service + "\n");
-            writer.write("Selected Group: " + groupComboBox.getSelectedItem() + "\n");
-            writer.write("\nList of Servers:\n");
-            for (String server : servers) {
-                writer.write("- " + server + "\n");
-            }
-        } catch (IOException e) {
-            showErrorDialog("Error creating report: " + e.getMessage());
+            showErrorDialog("Error opening reports folder: " + e.getMessage());
         }
     }
 

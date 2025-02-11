@@ -19,7 +19,7 @@ public class Main extends JFrame {
     public Main() {
         setTitle("Server Management");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(1000, 600);
+        setSize(1137, 600);
         setLocationRelativeTo(null);
 
         createAppDirectory();
@@ -41,6 +41,7 @@ public class Main extends JFrame {
         serviceListPanel.setPreferredSize(new Dimension(1000, 600));
         emailPanel.setPreferredSize(new Dimension(1000, 600));
         manageReportsPanel.setPreferredSize(new Dimension(1000, 600)); // Tamaño del panel
+
 
         mainPanel.add(buttonPanel, "Home");
         mainPanel.add(serverPanel, "Setup Server");

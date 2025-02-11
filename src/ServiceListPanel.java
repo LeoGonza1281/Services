@@ -7,7 +7,7 @@ import java.util.List;
 public class ServiceListPanel extends JPanel {
     private JList<String> servicesList;
     private DefaultListModel<String> serviceModel;
-    private JButton addButton, createListButton, editListButton, deleteListButton;
+    private JButton addButton, createListButton, editListButton, deleteListButton, addManualButton;
     private JTextArea selectedServicesArea;
     private JTextField searchField;
     private JComboBox<String> listDropdown;
@@ -27,7 +27,7 @@ public class ServiceListPanel extends JPanel {
         searchField.setFont(new Font("SansSerif", Font.PLAIN, 14));
         searchField.addActionListener(e -> filterServices());
 
-        createListButton = new JButton("Create New List");
+        createListButton = new JButton("Create List");
         createListButton.setFont(new Font("SansSerif", Font.BOLD, 14));
         createListButton.addActionListener(e -> createNewList());
 
@@ -44,12 +44,17 @@ public class ServiceListPanel extends JPanel {
         deleteListButton.setFont(new Font("SansSerif", Font.BOLD, 14));
         deleteListButton.addActionListener(e -> deleteSelectedList());
 
+        addManualButton = new JButton("Add Manual");
+        addManualButton.setFont(new Font("SansSerif", Font.BOLD, 14));
+        addManualButton.addActionListener(e -> addManualService());
+
         topPanel.add(new JLabel("Search:"));
         topPanel.add(searchField);
         topPanel.add(createListButton);
         topPanel.add(listDropdown);
         topPanel.add(editListButton);
         topPanel.add(deleteListButton);
+        topPanel.add(addManualButton);
 
         add(topPanel, BorderLayout.NORTH);
 
@@ -82,6 +87,20 @@ public class ServiceListPanel extends JPanel {
         });
 
         setPreferredSize(new Dimension(800, 600));
+        Dimension fixedSize = new Dimension(200, 30); // Ancho y alto fijo
+        listDropdown.setPreferredSize(fixedSize);
+        listDropdown.setMaximumSize(fixedSize);
+        listDropdown.setMinimumSize(fixedSize);
+        Dimension buttonSize = new Dimension(125, 40); // Ancho: 180px, Alto: 40px
+
+        createListButton.setPreferredSize(buttonSize);
+        editListButton.setPreferredSize(buttonSize);
+        deleteListButton.setPreferredSize(buttonSize);
+        addManualButton.setPreferredSize(buttonSize);
+        addButton.setPreferredSize(buttonSize);
+
+
+
 
         // Add component listener to handle resizing
         addComponentListener(new java.awt.event.ComponentAdapter() {
@@ -111,6 +130,7 @@ public class ServiceListPanel extends JPanel {
         deleteListButton.setFont(font.deriveFont(Font.BOLD));
         addButton.setFont(font.deriveFont(Font.BOLD));
         selectedServicesArea.setFont(new Font("Monospaced", Font.PLAIN, baseSize));
+        addManualButton.setFont(font.deriveFont(Font.BOLD));
 
         // Ajusta el tamaño de fuente para los elementos del JList
         servicesList.setCellRenderer(new DefaultListCellRenderer() {
@@ -157,6 +177,26 @@ public class ServiceListPanel extends JPanel {
         loadSelectedListServices(selectedList);
         JOptionPane.showMessageDialog(this, "Services added to " + selectedList);
     }
+
+    private void addManualService() {
+        String selectedList = (String) listDropdown.getSelectedItem();
+
+        if (selectedList == null || selectedList.equals("Select a list")) {
+            JOptionPane.showMessageDialog(this, "Please select a valid list.");
+            return;
+        }
+
+        String manualService = JOptionPane.showInputDialog(this, "Enter service name:");
+
+        if (manualService != null && !manualService.trim().isEmpty()) {
+            appendServiceToFile(manualService.trim(), selectedList);
+            loadSelectedListServices(selectedList);
+            JOptionPane.showMessageDialog(this, "Service added to " + selectedList);
+        } else {
+            JOptionPane.showMessageDialog(this, "Invalid service name.");
+        }
+    }
+
 
     private void appendServiceToFile(String serviceName, String selectedList) {
         String fileName = BASE_DIR + selectedList + ".txt";
